@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.1",
+    "mini-css-extract-plugin": "^2.7.6",
+    "sass": "^1.62.1"
+  },
+  "devDependencies": {
+    "css-loader": "^6.7.4",
+    "node-sass": "^8.0.0",
+    "sass-loader": "^13.2.2",
+    "style-loader": "^3.3.3",
+    "webpack": "^5.83.1",
+    "webpack-cli": "^5.1.1"
+  },
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack --watch"
+  }
+}

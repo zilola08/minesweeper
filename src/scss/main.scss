@@ -1,8 +1,22 @@
 // @import 'abstracts/variables';
 // @import 'abstracts/mixins';
-// @import 'base/base';
+@import 'base/base';
 // // @import 'reset/normalize';
 // @import 'components/buttons';
 // @import 'components/popup';
 // @import 'layouts/header';
 // @import 'layouts/footer';
+
+.boardCol, .gameboard {
+  border: 1px solid black;
+};
+
+.canvas {
+  border: 1px solid black;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  // this puts our canvas to the center of the page on any window size:
+  transform: translate(-50%, -50%);
+}

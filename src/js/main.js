@@ -49,7 +49,7 @@ window.addEventListener('load',function () {
     for (let i = 0; i < cellCount; i++) {
       if (!isCellOpen[i]) {
         // console.log(i);
-        // console.log(isCellOpen[i]);
+        // console.log(isCellOpen);
 
         let x = ((i) % cols) * colWidth;
         let y = (Math.floor(i / rows)) * colHeight;
@@ -80,40 +80,6 @@ window.addEventListener('load',function () {
 
   }
 
-
-
-
-  // Drawing mines as red circles
-  // for (let i = 0; i < rows; i++) {
-  // ctx.beginPath();
-  // ctx.arc((minesArray[i] * colWidth) - colWidth / 2,i * colWidth + colWidth / 2,colHeight / 3,0,Math.PI * 2);
-  // ctx.fillStyle = 'red';
-  // ctx.fill();
-
-  // ctx.drawImage(mineImg,(minesArray[i] * colWidth) - colWidth / 2,i * colWidth + colWidth / 2)
-  // }
-
-
-
-
-  // class Game {
-  //   constructor(width,height) {
-  //     this.width = width;
-  //     this.height = width;
-  //   }
-
-  //   update() {
-
-  //   }
-
-  //   draw() {
-
-
-  //   }
-  // }
-
-  drawBoard();
-
   function getCursorPosition(canvas,event) {
     const rect = canvas.getBoundingClientRect()
     x = event.clientX - rect.left;
@@ -134,7 +100,7 @@ window.addEventListener('load',function () {
 
   const checkFirstClick = () => {
     if (coords[1] == minesArray[coords[0] - 1]) {
-      let newMine = randomExcluded(1,10,minesArray[coords[0]]);
+      let newMine = randomExcluded(1,10,minesArray[coords[0] - 1]);
       minesArray.splice(coords[0] - 1,1,newMine);
       console.log(minesArray);
     }
@@ -191,15 +157,47 @@ window.addEventListener('load',function () {
     return minesAroundArray;
   };
 
+  const open = (i,j) => {
+
+    if (i < 1 || j < 1 || i > rows || j > cols) {
+      return;
+    }
+
+    if (!isMine(i,j)) {
+      if (countMinesAround(i,j) == 0) {
+        expandOpen(i,j);
+
+        let cellIndex = ((i - 1) * rows) + j - 1;
+
+      }
+      else {
+        // if there are mines Around
+        // show minesAround
+        showMinesAround(i,j);
+      };
+    } else {
+      exposeMines();
+    }
+  }
 
   const styleOpenCell = (x,y) => {
+
+    if (x < 1 || y < 1 || x > rows || y > cols) {
+      return;
+    }
+
     ctx.fillStyle = 'lightgray';
     ctx.fillRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
     ctx.strokeStyle = 'black';
     ctx.strokeRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
+
+    let cellIndex = ((x - 1) * rows) + y - 1;
+    isCellOpen.splice(cellIndex,1,true);
+    // console.log(x, y, cellIndex, isCellOpen.splice(cellIndex,1,true))
   };
 
   const showMinesAround = (x,y) => {
+    styleOpenCell(x,y);
     ctx.font = "35px Georgia";
     ctx.fillStyle = "red";
     ctx.textAlign = 'center'
@@ -208,117 +206,124 @@ window.addEventListener('load',function () {
 
   const expandOpen = (i,j) => {
 
-    if (i > rows || j > cols || i < 1 || j < 1) {
+    if (i < 1 || j < 1 || i > rows || j > cols) {
       return;
-    };
-
-    if (countMinesAround(i,j) == 0) {
-      styleOpenCell(i,j);
     }
 
-    if (countMinesAround(i,j) !== 0 && !isMine(i,j)) {
-      styleOpenCell(i,j);
-      showMinesAround(i,j);
-      return;
-    };
+    let cellIndex = ((i - 1) * rows) + j - 1;
 
-    return expandOpen(i,j-1);
-  }
+    if (minesAroundArray[cellIndex - 11] == 0 && !isCellOpen[cellIndex - 11]) {
+      styleOpenCell(i - 1,j - 1);
+      open(i - 1,j - 1);
+    }
+    else if (minesAround[cellIndex - 11] !== 0 && !isCellOpen[cellIndex - 11]) {
+      showMinesAround(i - 1,j - 1);
+    }
+    if (minesAroundArray[cellIndex - 10] == 0 && !isCellOpen[cellIndex - 10]) {
+      styleOpenCell(i - 1,j);
+      open(i - 1,j);
+    }
+    else if (minesAround[cellIndex - 10] !== 0 && !isCellOpen[cellIndex - 10]) {
+      showMinesAround(i - 1,j);
+    }
+    if (minesAroundArray[cellIndex - 9] == 0 && !isCellOpen[cellIndex - 9]) {
+      styleOpenCell(i - 1,j + 1);
+      open(i - 1,j + 1);
+    }
+    else if (minesAround[cellIndex - 9] !== 0 && !isCellOpen[cellIndex - 9]) {
+      showMinesAround(i - 1,j + 1);
+    }
+
+    if (minesAroundArray[cellIndex - 1] == 0 && !isCellOpen[cellIndex - 1]) {
+      styleOpenCell(i,j - 1);
+      open(i,j - 1);
+    }
+    else if (minesAround[cellIndex - 1] !== 0 && !isCellOpen[cellIndex - 1]) {
+      showMinesAround(i,j - 1);
+    }
+    if (minesAroundArray[cellIndex + 1] == 0 && !isCellOpen[cellIndex + 1]) {
+      styleOpenCell(i,j + 1);
+      open(i,j + 1);
+    }
+    else if (minesAround[cellIndex + 1] !== 0 && !isCellOpen[cellIndex + 1]) {
+      showMinesAround(i,j + 1);
+    }
+
+    if (minesAroundArray[cellIndex + 9] == 0 && !isCellOpen[cellIndex + 9]) {
+      styleOpenCell(i + 1,j - 1);
+      open(i + 1,j - 1);
+    }
+    else if (minesAround[cellIndex + 9] !== 0 && !isCellOpen[cellIndex + 9]) {
+      showMinesAround(i + 1,j - 1);
+    }
+    if (minesAroundArray[cellIndex + 10] == 0 && !isCellOpen[cellIndex + 10]) {
+      styleOpenCell(i + 1,j);
+      open(i + 1,j);
+    }
+    else if (minesAround[cellIndex + 10] !== 0 && !isCellOpen[cellIndex + 10]) {
+      showMinesAround(i + 1,j);
+    }
+    if (minesAroundArray[cellIndex + 11] == 0 && !isCellOpen[cellIndex + 11]) {
+      styleOpenCell(i + 1,j + 1);
+      open(i + 1,j + 1);
+    }
+    else if (minesAround[cellIndex + 11] !== 0 && !isCellOpen[cellIndex + 11]) {
+      showMinesAround(i + 1,j + 1);
+    }
+  };
+
+  // class Game {
+  //   constructor(width,height) {
+  //     this.width = width;
+  //     this.height = width;
+  //   }
+
+  //   update() {
+
+  //   }
+
+  //   draw() {
+
+
+  //   }
+  // }
+
+  drawBoard();
 
   let x = 0;
   let y = 0;
   let clicks = 0;
   let coords = [];
   let isCellOpen = new Array(cellCount).fill(false);
+  // console.log(isCellOpen);
   let clickedCellIndex;
   let minesAround;
 
   canvas.addEventListener('mousedown',function (e) {
     clicks++;
     getCursorPosition(canvas,e);
-    console.log(coords,clicks);
     clickedCellIndex = ((coords[0] - 1) * minesCount) + coords[1] - 1;
-    console.log(clickedCellIndex);
 
-    // place mines only after the forst click
+    // place mines only after the first click
     // and replace the mine with another is first click was on a mine
     if (clicks == 1) {
       placeMines();
       checkFirstClick();
-      console.log(countMinesAroundAll());
+      // console.log(countMinesAroundAll());
     }
-
-
-    // countMinesAroundAll();
-    // console.log(minesAroundArray);
-
+    countMinesAroundAll();
     // check is cell is already open
     // and if it is not
     if (!isCellOpen[clickedCellIndex]) {
-      console.log(isMine());
-      // check if it is a mine
-      if (isMine(coords[0],coords[1])) {
-        //if it is a mine
-        //then - game over
-        exposeMines();
-      }
-      // if it is not a mine
-      else {
-        //if no mines around
-        if (countMinesAround(coords[0],coords[1]) == 0) {
-          // style the cell and do nothing
-          console.log('opening');
-          console.log('not a mine');
-          isCellOpen.splice(clickedCellIndex,1,true);
-          expandOpen(coords[0],coords[1]);
-          // styleOpenCell(coords[0],coords[1]);
-          // console.log(isCellOpen);
-
-        } else {
-          //if there are mines Around
-          //show minesAround
-          console.log(countMinesAround(coords[0],coords[1]));
-          styleOpenCell();
-          showMinesAround(coords[0],coords[1]);
-          isCellOpen.splice(clickedCellIndex,1,true);
-        };
-      }
+      open(coords[0],coords[1]);
+      // console.log(isCellOpen);
     }
-    else if (isCellOpen[clickedCellIndex]) {
+    else {
+      // console.log(clickedCellIndex);
+      // console.log(isCellOpen[clickedCellIndex]);
       console.log('already open cell');
     }
-
-
-
-  });
-
+  })
 
 })
-
-// const gameboard = document.createElement('div');
-// gameboard.className = 'gameboard';
-// root.appendChild(gameboard);
-
-// for (let i = 0; i < rows; i++) {
-  //   let colWidth = 50;
-  //   let colHeight = 50;
-  //   let boardRow = document.createElement('div');
-  //   boardRow.className = 'boardRow';
-  //   gameboard.appendChild(boardRow);
-  //   boardRow.style.width = `${colWidth * cols}px`;
-  //   boardRow.style.height = `${colHeight}px`;
-  //   gameboard.style.width = `${colWidth * cols}px`;
-  //   gameboard.style.height = `${colHeight * cols}px`;
-
-  // for (let j = 0; j < cols; j++) {
-
-    //     let boardCol = document.createElement('div');
-    //     boardCol.className = 'boardCol';
-    //     boardRow.appendChild(boardCol);
-    //     boardCol.style.width = `${colWidth}px`;
-    //     boardCol.style.height = `${colHeight}px`;
-    //     boardCol.style.display = 'inline-block';
-
-  // }
-// }
 

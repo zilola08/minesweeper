@@ -7,8 +7,8 @@ let minesCount = 10;
 let rows = 10;
 let cols = 10;
 let cellCount = rows * cols;
-let colWidth = 40;
-let colHeight = 40;
+let colWidth = 30;
+let colHeight = 30;
 
 const minesAroundArray = [];
 
@@ -90,15 +90,15 @@ window.addEventListener('load',function () {
       },
       false
     );
-    mineImg.src = "./assets/img/small-mine-40.png";
+    mineImg.src = `./assets/img/small-mine-${colWidth}.png`;
   }
 
   function getCursorPosition(canvas,event) {
     const rect = canvas.getBoundingClientRect()
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
-    let rowClicki = Math.floor(y / 40) + 1;
-    let colClickj = Math.floor(x / 40) + 1;
+    let rowClicki = Math.floor(y / colWidth) + 1;
+    let colClickj = Math.floor(x / colHeight) + 1;
     coords = [rowClicki,colClickj];
     return coords;
   }
@@ -287,12 +287,6 @@ window.addEventListener('load',function () {
 
     isCellFlaggedArray.splice(cellIndex,1,true);
 
-    const flag = new Object();
-    flag.i = i;
-    flag.j = j;
-    flags.push(flag);
-    flags.sort((a,b) => a.i - b.i);
-
     flagIndexes.push(cellIndex);
     flagIndexes.sort((a,b) => a.i - b.i);
 
@@ -300,8 +294,8 @@ window.addEventListener('load',function () {
 
     let x = ((j - 1) * colWidth);
     let y = (i - 1) * colHeight;
-    let ximg = ((j - 1) * colWidth) + colWidth / 4;
-    let yimg = (i - 1) * colHeight + colWidth / 7;
+    // let ximg = ((j - 1) * colWidth) + colWidth / 4;
+    // let yimg = (i - 1) * colHeight + colWidth / 7;
 
     let flagImg = new Image();
     flagImg.addEventListener(
@@ -312,7 +306,7 @@ window.addEventListener('load',function () {
         ctx.fillRect(x,y,colWidth,colHeight);
         ctx.strokeStyle = 'black';
         ctx.strokeRect(x,y,colWidth,colHeight);
-        ctx.drawImage(flagImg,ximg,yimg);
+        ctx.drawImage(flagImg,x,y);
       },
       false
     );

@@ -1,12 +1,12 @@
 import '../scss/main.scss';
 
 
-let minesArray = [];
+const minesArray = [];
+const mineIndexesArray = [];
 let minesCount = 10;
 let rows = 10;
 let cols = 10;
-let cellCount = 100;
-
+let cellCount = rows * cols;
 let colWidth = 40;
 let colHeight = 40;
 
@@ -41,16 +41,15 @@ window.addEventListener('load',function () {
       minesArray.push(mine);
     }
 
-    console.log(minesArray);
+    for (let i = 0; i < minesCount; i++) {
+      let mineIndex = (i * rows) + minesArray[i] - 1;
+      mineIndexesArray.push(mineIndex);
+    }
   }
 
-  // Exposing all mines (from downloaded img)
-  const exposeMines = () => {
+  const openUnopened = () => {
     for (let i = 0; i < cellCount; i++) {
       if (!isCellOpen[i]) {
-        // console.log(i);
-        // console.log(isCellOpen);
-
         let x = ((i) % cols) * colWidth;
         let y = (Math.floor(i / rows)) * colHeight;
 
@@ -58,16 +57,31 @@ window.addEventListener('load',function () {
         ctx.fillRect(x,y,colWidth,colHeight);
         ctx.strokeStyle = 'black';
         ctx.strokeRect(x,y,colWidth,colHeight);
+
+        isCellOpen.splice(i,1,true);
       }
     }
-    // console.log(isCellOpen);
+  }
+
+  // Exposing all mines (from downloaded img)
+  const exposeMines = (didWin) => {
+    openUnopened();
+
+    let color;
+
+    if (didWin == true) {
+      color = 'green';
+    } else {
+      color = 'pink';
+    }
+
     let mineImg = new Image();
     mineImg.addEventListener(
       "load",
       () => {
         for (let i = 0; i < rows; i++) {
           ctx.clearRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
-          ctx.fillStyle = 'pink';
+          ctx.fillStyle = color;
           ctx.fillRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
           ctx.strokeStyle = 'black';
           ctx.strokeRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
@@ -77,7 +91,6 @@ window.addEventListener('load',function () {
       false
     );
     mineImg.src = "./assets/img/small-mine-40.png";
-
   }
 
   function getCursorPosition(canvas,event) {
@@ -86,8 +99,6 @@ window.addEventListener('load',function () {
     y = event.clientY - rect.top;
     let rowClicki = Math.floor(y / 40) + 1;
     let colClickj = Math.floor(x / 40) + 1;
-    // console.log("x: " + x + " y: " + y);
-    // console.log("i: " + colClicki + " j: " + rowClickj);
     coords = [rowClicki,colClickj];
     return coords;
   }
@@ -102,7 +113,6 @@ window.addEventListener('load',function () {
     if (coords[1] == minesArray[coords[0] - 1]) {
       let newMine = randomExcluded(1,10,minesArray[coords[0] - 1]);
       minesArray.splice(coords[0] - 1,1,newMine);
-      console.log(minesArray);
     }
   }
   // coords[1] == minesArray[coords[0] - 1]
@@ -159,24 +169,20 @@ window.addEventListener('load',function () {
 
   const open = (i,j) => {
 
-    if (i < 1 || j < 1 || i > rows || j > cols) {
-      return;
-    }
+    if (i < 1 || j < 1 || i > rows || j > cols) { return; }
 
     if (!isMine(i,j)) {
       if (countMinesAround(i,j) == 0) {
+        styleOpenCell(i,j);
         expandOpen(i,j);
-
-        let cellIndex = ((i - 1) * rows) + j - 1;
-
       }
       else {
         // if there are mines Around
-        // show minesAround
         showMinesAround(i,j);
+        // unopenedCellsCount--;
       };
     } else {
-      exposeMines();
+      exposeMines(false);
     }
   }
 
@@ -193,7 +199,6 @@ window.addEventListener('load',function () {
 
     let cellIndex = ((x - 1) * rows) + y - 1;
     isCellOpen.splice(cellIndex,1,true);
-    // console.log(x, y, cellIndex, isCellOpen.splice(cellIndex,1,true))
   };
 
   const showMinesAround = (x,y) => {
@@ -272,6 +277,94 @@ window.addEventListener('load',function () {
     }
   };
 
+  let isCellFlaggedArray = new Array(cellCount).fill(false);
+
+  let flags = [];
+  let flagIndexes = [];
+
+  const flagCell = (i,j) => {
+    let cellIndex = ((i - 1) * rows) + j - 1;
+
+    isCellFlaggedArray.splice(cellIndex,1,true);
+
+    const flag = new Object();
+    flag.i = i;
+    flag.j = j;
+    flags.push(flag);
+    flags.sort((a,b) => a.i - b.i);
+
+    flagIndexes.push(cellIndex);
+    flagIndexes.sort((a,b) => a.i - b.i);
+
+    isCellOpen.splice(cellIndex,1,'flagged');
+
+    let x = ((j - 1) * colWidth);
+    let y = (i - 1) * colHeight;
+    let ximg = ((j - 1) * colWidth) + colWidth / 4;
+    let yimg = (i - 1) * colHeight + colWidth / 7;
+
+    let flagImg = new Image();
+    flagImg.addEventListener(
+      "load",
+      () => {
+        ctx.clearRect(x,y,colWidth,colHeight);
+        ctx.fillStyle = 'lightgreen';
+        ctx.fillRect(x,y,colWidth,colHeight);
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(x,y,colWidth,colHeight);
+        ctx.drawImage(flagImg,ximg,yimg);
+      },
+      false
+    );
+    flagImg.src = "./assets/img/flag-30.png";
+  }
+
+  const unflag = (i,j) => {
+
+    let cellIndex = ((i - 1) * rows) + j - 1;
+
+    isCellFlaggedArray.splice(cellIndex,1,false);
+    isCellOpen.splice(cellIndex,1,false);
+
+    function filterOutFlag(flag) {
+      return (flag.i !== i && flag.j == j)
+    }
+
+    flags = flags.filter(filterOutFlag);
+    flagIndexes = flagIndexes.filter((el) => el !== cellIndex);
+
+    let x = ((j - 1) * colWidth);
+    let y = (i - 1) * colHeight;
+    ctx.clearRect(x,y,colWidth,colHeight);
+    ctx.strokeStyle = 'gray';
+    ctx.strokeRect(x,y,colWidth,colHeight);
+  }
+
+  const checkIfWon = () => {
+
+    const arrayMatch = (array1,array2) =>
+      array2.every((element) => array1.includes(element));
+
+    if (arrayMatch(flagIndexes,mineIndexesArray)) {
+      // if all mines were flagged
+      exposeMines(true);
+      window.alert("You Won!");
+      return true;
+    }
+
+    else if (isCellOpen.filter(el => el == false).length == minesCount) {
+      exposeMines(true);
+      window.alert("You Won!");
+      return true;
+    }
+    // if all mines were flagged
+
+    //if flagged cells number is not equal to the minesCount
+    else {
+      return false;
+    }
+  }
+
   // class Game {
   //   constructor(width,height) {
   //     this.width = width;
@@ -295,35 +388,57 @@ window.addEventListener('load',function () {
   let clicks = 0;
   let coords = [];
   let isCellOpen = new Array(cellCount).fill(false);
-  // console.log(isCellOpen);
   let clickedCellIndex;
   let minesAround;
 
+  canvas.addEventListener('contextmenu',function (e) {
+    e.preventDefault();
+  });
+
   canvas.addEventListener('mousedown',function (e) {
+
+
     clicks++;
     getCursorPosition(canvas,e);
     clickedCellIndex = ((coords[0] - 1) * minesCount) + coords[1] - 1;
 
-    // place mines only after the first click
-    // and replace the mine with another is first click was on a mine
     if (clicks == 1) {
       placeMines();
       checkFirstClick();
-      // console.log(countMinesAroundAll());
     }
     countMinesAroundAll();
-    // check is cell is already open
-    // and if it is not
-    if (!isCellOpen[clickedCellIndex]) {
-      open(coords[0],coords[1]);
-      // console.log(isCellOpen);
+
+    //left-click
+    if (e.button !== 2) {
+
+      // place mines only after the first click
+      // and replace the mine with another is first click was on a mine
+      // check is cell is already open
+      // and if it is not
+      if (!isCellOpen[clickedCellIndex]) {
+        open(coords[0],coords[1]);
+      }
+      else if (isCellOpen[clickedCellIndex] == true) {
+        console.log('already open cell');
+      }
+
+      checkIfWon();
+
     }
+    //right-click
     else {
-      // console.log(clickedCellIndex);
-      // console.log(isCellOpen[clickedCellIndex]);
-      console.log('already open cell');
+      if (isCellOpen[clickedCellIndex] !== 'flagged' && isCellOpen[clickedCellIndex] == false) {
+        flagCell(coords[0],coords[1]);
+      }
+      else if (isCellOpen[clickedCellIndex] == 'flagged') {
+        unflag(coords[0],coords[1]);
+      }
+
+      checkIfWon();
     }
   })
 
 })
+
+
 

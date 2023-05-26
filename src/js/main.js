@@ -26,7 +26,7 @@ window.addEventListener('load',function () {
   const drawBoard = () => {
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        ctx.strokeStyle = 'gray';
+        ctx.strokeStyle = '#9fb3c1';
         ctx.strokeRect(i * colWidth,j * colHeight,colWidth,colHeight);
       }
     }
@@ -53,9 +53,9 @@ window.addEventListener('load',function () {
         let x = ((i) % cols) * colWidth;
         let y = (Math.floor(i / rows)) * colHeight;
 
-        ctx.fillStyle = 'lightgray';
+        ctx.fillStyle = '#6b7985';
         ctx.fillRect(x,y,colWidth,colHeight);
-        ctx.strokeStyle = 'black';
+        ctx.strokeStyle = '#404950';
         ctx.strokeRect(x,y,colWidth,colHeight);
 
         isCellOpen.splice(i,1,true);
@@ -192,9 +192,14 @@ window.addEventListener('load',function () {
       return;
     }
 
-    ctx.fillStyle = 'lightgray';
+    // ctx.fillRect(x,y,colWidth,colHeight);
+    // ctx.strokeRect(x,y,colWidth,colHeight);
+
+    ctx.fillStyle = '#8294a4';
+    // ctx.fillStyle = 'lightgray';
     ctx.fillRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = '#404950';
+    // ctx.strokeStyle = 'black';
     ctx.strokeRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
 
     let cellIndex = ((x - 1) * rows) + y - 1;
@@ -202,11 +207,29 @@ window.addEventListener('load',function () {
   };
 
   const showMinesAround = (x,y) => {
+    if (x < 1 || y < 1 || x > rows || y > cols) {
+      return;
+    }
     styleOpenCell(x,y);
-    ctx.font = "35px Georgia";
-    ctx.fillStyle = "red";
+    ctx.font = "20px Verdana";
     ctx.textAlign = 'center'
-    ctx.fillText(`${countMinesAround(x,y)}`,(y * colWidth) - colWidth / 2,(x * colHeight) - colHeight / 3.3);
+
+    if (countMinesAround(x,y) == 1) {
+      ctx.fillStyle = "#a2d2ff";
+    } else if (countMinesAround(x,y) == 2) {
+      ctx.fillStyle = "#ffafcc";
+    } else if (countMinesAround(x,y) == 3) {
+      ctx.fillStyle = "#cdb4db";
+    } else if (countMinesAround(x,y) == 4) {
+      ctx.fillStyle = "#fcf6bd";
+    } else if (countMinesAround(x,y) == 5) {
+      ctx.fillStyle = "#f1faee";
+    } else {
+      ctx.fillStyle = "#f5af63";
+    }
+
+    ctx.fillText(`${countMinesAround(x,y)}`,(y * colWidth) - colWidth / 2,(x * colHeight) - colHeight / 4);
+
   }
 
   const expandOpen = (i,j) => {
@@ -294,15 +317,13 @@ window.addEventListener('load',function () {
 
     let x = ((j - 1) * colWidth);
     let y = (i - 1) * colHeight;
-    // let ximg = ((j - 1) * colWidth) + colWidth / 4;
-    // let yimg = (i - 1) * colHeight + colWidth / 7;
 
     let flagImg = new Image();
     flagImg.addEventListener(
       "load",
       () => {
         ctx.clearRect(x,y,colWidth,colHeight);
-        ctx.fillStyle = 'lightgreen';
+        ctx.fillStyle = '#a2efdf';
         ctx.fillRect(x,y,colWidth,colHeight);
         ctx.strokeStyle = 'black';
         ctx.strokeRect(x,y,colWidth,colHeight);
@@ -310,7 +331,7 @@ window.addEventListener('load',function () {
       },
       false
     );
-    flagImg.src = "./assets/img/flag-30.png";
+    flagImg.src = "./assets/img/flag1-30.png";
   }
 
   const unflag = (i,j) => {

@@ -8,14 +8,15 @@
 // @import 'layouts/footer';
 
 .boardCol, .gameboard {
-  border: 1px solid black;
+  border: 1px solid #9fb3c1;
 };
 
 .canvas {
-  border: 1px solid black;
+  border: 1px solid #9fb3c1;
   position: absolute;
   top: 50%;
   left: 50%;
+  border-radius: 5px;
 
   // this puts our canvas to the center of the page on any window size:
   transform: translate(-50%, -50%);

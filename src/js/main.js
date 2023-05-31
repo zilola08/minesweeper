@@ -1,26 +1,11 @@
 import '../scss/main.scss';
 
-
-const minesArray = [];
-const mineIndexesArray = [];
-let minesCount = 10;
-let rows = 10;
-let cols = 10;
-let cellCount = rows * cols;
-let colWidth = 30;
-let colHeight = 30;
-
-const minesAroundArray = [];
-
 const root = document.querySelector('.root');
 const canvas = document.createElement('canvas');
 canvas.className = 'canvas';
 root.appendChild(canvas);
 
 window.addEventListener('load',function () {
-  const ctx = canvas.getContext('2d');
-  canvas.height = colHeight * cols;
-  canvas.width = colWidth * rows;
 
   // Drawing the gameboard
   const drawBoard = () => {
@@ -37,14 +22,15 @@ window.addEventListener('load',function () {
   const placeMines = () => {
 
     for (let i = 0; i < minesCount; i++) {
-      let mine = Math.ceil(Math.random() * minesCount);
-      minesArray.push(mine);
-    }
 
-    for (let i = 0; i < minesCount; i++) {
-      let mineIndex = (i * rows) + minesArray[i] - 1;
-      mineIndexesArray.push(mineIndex);
+      let mineIndex = Math.floor(Math.random() * cellIndexAll.length);
+
+      mineIndexesArray.push(cellIndexAll[mineIndex]);
+
+      cellIndexAll.splice(mineIndex,1);
     }
+    mineIndexesArray.sort((a,b) => a - b);
+    console.log(mineIndexesArray);
   }
 
   const openUnopened = () => {
@@ -73,28 +59,39 @@ window.addEventListener('load',function () {
       color = 'green';
     } else {
       color = 'pink';
+      setTimeout(() => {
+        window.alert('Game over. Try again!')
+      },20)
     }
 
     let mineImg = new Image();
+
     mineImg.addEventListener(
       "load",
       () => {
-        for (let i = 0; i < rows; i++) {
-          ctx.clearRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
+
+        for (let i = 0; i < minesCount; i++) {
+          let x = (mineIndexesArray[i] % cols) * colWidth;
+          let y = (Math.floor(mineIndexesArray[i] / rows)) * colHeight;
+
+          ctx.clearRect(x,y,colWidth,colHeight);
           ctx.fillStyle = color;
-          ctx.fillRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
+          ctx.fillRect(x,y,colWidth,colHeight);
           ctx.strokeStyle = 'black';
-          ctx.strokeRect(((minesArray[i] - 1) * colWidth),i * colWidth,colWidth,colHeight);
-          ctx.drawImage(mineImg,((minesArray[i] - 1) * colWidth),i * colWidth);
+          ctx.strokeRect(x,y,colWidth,colHeight);
+          ctx.drawImage(mineImg,x,y);
         }
       },
       false
     );
     mineImg.src = `./assets/img/small-mine-${colWidth}.png`;
+
   }
 
   function getCursorPosition(canvas,event) {
-    const rect = canvas.getBoundingClientRect()
+    const rect = canvas.getBoundingClientRect();
+    let x = 0;
+    let y = 0;
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
     let rowClicki = Math.floor(y / colWidth) + 1;
@@ -110,203 +107,269 @@ window.addEventListener('load',function () {
   }
 
   const checkFirstClick = () => {
-    if (coords[1] == minesArray[coords[0] - 1]) {
-      let newMine = randomExcluded(1,10,minesArray[coords[0] - 1]);
-      minesArray.splice(coords[0] - 1,1,newMine);
+
+    if (mineIndexesArray.includes(clickedCellIndex)) {
+
+      let newMine = randomExcluded(1,cellIndexAll.length,clickedCellIndex);
+
+      mineIndexesArray.splice(mineIndexesArray.indexOf(clickedCellIndex),1,newMine);
+
+      cellIndexAll.splice(cellIndexAll.indexOf(newMine),1);
     }
   }
-  // coords[1] == minesArray[coords[0] - 1]
-  const isMine = (x,y) => {
-    if (y == minesArray[x - 1]) {
+
+  const isMine = (cellIndex) => {
+    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+      return;
+    }
+
+    if (mineIndexesArray.includes(cellIndex)) {
       return true;
     } else {
       return false;
     }
   }
 
-  const countMinesAround = (ipos,jpos) => {
+  const isNotRightEdge = (cellIndex) => {
+    if ((cellIndex % cols) !== (cols - 1)) {
+      return true;
+    }
+  }
+
+  const isNotLeftEdge = (cellIndex) => {
+    if ((cellIndex % cols) !== 0) {
+      return true;
+    }
+  }
+
+  const isNotTop = (cellIndex) => {
+    if ((cellIndex - cols) >= 0) {
+      return true;
+    }
+  }
+
+  const isNotBottom = (cellIndex) => {
+    if ((cellIndex + cols) <= cellCount) {
+      return true;
+    }
+  }
+
+  const countMinesAround = (cellIndex) => {
     minesAround = 0;
-    // cells on the row above, start from the left
-    if (isMine(ipos - 1,jpos - 1)) {
-      minesAround++;
-    }
-    if (isMine(ipos - 1,jpos)) {
-      minesAround++;
-    }
-    if (isMine(ipos - 1,jpos + 1)) {
-      minesAround++;
+
+    if (isNotTop(cellIndex) && isNotLeftEdge(cellIndex)) {
+      if (isMine(cellIndex - 11)) {
+        minesAround++;
+      }
     }
 
-    // cells on the same row, start from the left
-    if (isMine(ipos,jpos - 1)) {
-      minesAround++;
-    }
-    if (isMine(ipos,jpos + 1)) {
-      minesAround++;
+    if (isNotTop(cellIndex)) {
+      if (isMine(cellIndex - 10)) {
+        minesAround++;
+      }
     }
 
-    // cells on the row below, start from the left
-    if (isMine(ipos + 1,jpos - 1)) {
-      minesAround++;
+    if (isNotTop(cellIndex) && isNotRightEdge(cellIndex)) {
+
+      if (isMine(cellIndex - 9)) {
+        minesAround++;
+      }
     }
-    if (isMine(ipos + 1,jpos)) {
-      minesAround++;
+
+    if (isNotLeftEdge(cellIndex)) {
+      if (isMine(cellIndex - 1)) {
+        minesAround++;
+      }
     }
-    if (isMine(ipos + 1,jpos + 1)) {
-      minesAround++;
+
+    if (isNotRightEdge(cellIndex)) {
+      if (isMine(cellIndex + 1)) {
+        minesAround++;
+      }
+    }
+
+    if (isNotBottom(cellIndex) && isNotLeftEdge(cellIndex)) {
+      if (isMine(cellIndex + 9)) {
+        minesAround++;
+      }
+    }
+    if (isNotBottom(cellIndex)) {
+      if (isMine(cellIndex + 10)) {
+        minesAround++;
+      }
+    }
+    if (isNotBottom(cellIndex) && isNotRightEdge(cellIndex)) {
+      if (isMine(cellIndex + 11)) {
+        minesAround++;
+      }
     }
     return minesAround;
   };
 
   const countMinesAroundAll = () => {
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        minesAroundArray.push(countMinesAround(i + 1,j + 1));
-      }
+
+    for (let i = 0; i < cellCount; i++) {
+      minesAroundArray.push(countMinesAround(i));
     }
     return minesAroundArray;
   };
 
-  const open = (i,j) => {
+  const open = (cellIndex) => {
 
-    if (i < 1 || j < 1 || i > rows || j > cols) { return; }
+    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+      return;
+    }
 
-    if (!isMine(i,j)) {
-      if (countMinesAround(i,j) == 0) {
-        styleOpenCell(i,j);
-        expandOpen(i,j);
+    if (isMine(cellIndex) == false) {
+
+      if (minesAroundArray[cellIndex] == 0) {
+        styleOpenCell(cellIndex);
+        expandOpen(cellIndex);
       }
       else {
         // if there are mines Around
-        showMinesAround(i,j);
-        // unopenedCellsCount--;
+        showMinesAround(cellIndex);
       };
-    } else {
+    } else if (isMine(cellIndex) == true) {
       exposeMines(false);
     }
   }
 
-  const styleOpenCell = (x,y) => {
+  const styleOpenCell = (cellIndex) => {
 
-    if (x < 1 || y < 1 || x > rows || y > cols) {
+    if (cellIndex < 0 || cellIndex > cellCount - 1) {
       return;
     }
 
-    // ctx.fillRect(x,y,colWidth,colHeight);
-    // ctx.strokeRect(x,y,colWidth,colHeight);
+    let x = (cellIndex % cols) * colWidth;
+    let y = (Math.floor(cellIndex / rows)) * colHeight;
 
     ctx.fillStyle = '#8294a4';
-    // ctx.fillStyle = 'lightgray';
-    ctx.fillRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
+    ctx.fillRect(x,y,colWidth,colHeight);
     ctx.strokeStyle = '#404950';
-    // ctx.strokeStyle = 'black';
-    ctx.strokeRect((y * colWidth) - colWidth,(x * colHeight) - colHeight,colWidth,colHeight);
+    ctx.strokeRect(x,y,colWidth,colHeight);
 
-    let cellIndex = ((x - 1) * rows) + y - 1;
     isCellOpen.splice(cellIndex,1,true);
   };
 
-  const showMinesAround = (x,y) => {
-    if (x < 1 || y < 1 || x > rows || y > cols) {
+  const showMinesAround = (cellIndex) => {
+    if (cellIndex < 0 || cellIndex > cellCount - 1) {
       return;
     }
-    styleOpenCell(x,y);
+
+    let x = (cellIndex % cols) * colWidth;
+    let y = (Math.floor(cellIndex / rows)) * colHeight;
+
+    styleOpenCell(cellIndex);
     ctx.font = "20px Verdana";
     ctx.textAlign = 'center'
 
-    if (countMinesAround(x,y) == 1) {
+    if (minesAroundArray[cellIndex] == 1) {
       ctx.fillStyle = "#a2d2ff";
-    } else if (countMinesAround(x,y) == 2) {
+    } else if (minesAroundArray[cellIndex] == 2) {
       ctx.fillStyle = "#ffafcc";
-    } else if (countMinesAround(x,y) == 3) {
+    } else if (minesAroundArray[cellIndex] == 3) {
       ctx.fillStyle = "#cdb4db";
-    } else if (countMinesAround(x,y) == 4) {
+    } else if (minesAroundArray[cellIndex] == 4) {
       ctx.fillStyle = "#fcf6bd";
-    } else if (countMinesAround(x,y) == 5) {
+    } else if (minesAroundArray[cellIndex] == 5) {
       ctx.fillStyle = "#f1faee";
     } else {
       ctx.fillStyle = "#f5af63";
     }
 
-    ctx.fillText(`${countMinesAround(x,y)}`,(y * colWidth) - colWidth / 2,(x * colHeight) - colHeight / 4);
+    ctx.fillText(`${minesAroundArray[cellIndex]}`,x + colWidth / 2,y + colHeight / 1.3);
 
   }
 
-  const expandOpen = (i,j) => {
+  const expandOpen = (cellIndex) => {
 
-    if (i < 1 || j < 1 || i > rows || j > cols) {
+    if (cellIndex < 0 || cellIndex > cellCount - 1) {
       return;
     }
 
-    let cellIndex = ((i - 1) * rows) + j - 1;
-
-    if (minesAroundArray[cellIndex - 11] == 0 && !isCellOpen[cellIndex - 11]) {
-      styleOpenCell(i - 1,j - 1);
-      open(i - 1,j - 1);
-    }
-    else if (minesAround[cellIndex - 11] !== 0 && !isCellOpen[cellIndex - 11]) {
-      showMinesAround(i - 1,j - 1);
-    }
-    if (minesAroundArray[cellIndex - 10] == 0 && !isCellOpen[cellIndex - 10]) {
-      styleOpenCell(i - 1,j);
-      open(i - 1,j);
-    }
-    else if (minesAround[cellIndex - 10] !== 0 && !isCellOpen[cellIndex - 10]) {
-      showMinesAround(i - 1,j);
-    }
-    if (minesAroundArray[cellIndex - 9] == 0 && !isCellOpen[cellIndex - 9]) {
-      styleOpenCell(i - 1,j + 1);
-      open(i - 1,j + 1);
-    }
-    else if (minesAround[cellIndex - 9] !== 0 && !isCellOpen[cellIndex - 9]) {
-      showMinesAround(i - 1,j + 1);
+    if (isNotTop(cellIndex) && isNotLeftEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex - 11] == 0 && !isCellOpen[cellIndex - 11]) {
+        styleOpenCell(cellIndex - 11);
+        open(cellIndex - 11);
+      }
+      else if (minesAround[cellIndex - 11] !== 0 && !isCellOpen[cellIndex - 11]) {
+        showMinesAround(cellIndex - 11);
+      }
     }
 
-    if (minesAroundArray[cellIndex - 1] == 0 && !isCellOpen[cellIndex - 1]) {
-      styleOpenCell(i,j - 1);
-      open(i,j - 1);
-    }
-    else if (minesAround[cellIndex - 1] !== 0 && !isCellOpen[cellIndex - 1]) {
-      showMinesAround(i,j - 1);
-    }
-    if (minesAroundArray[cellIndex + 1] == 0 && !isCellOpen[cellIndex + 1]) {
-      styleOpenCell(i,j + 1);
-      open(i,j + 1);
-    }
-    else if (minesAround[cellIndex + 1] !== 0 && !isCellOpen[cellIndex + 1]) {
-      showMinesAround(i,j + 1);
+    if (isNotTop(cellIndex)) {
+      if (minesAroundArray[cellIndex - 10] == 0 && !isCellOpen[cellIndex - 10]) {
+        styleOpenCell(cellIndex - 10);
+        open(cellIndex - 10);
+      }
+      else if (minesAround[cellIndex - 10] !== 0 && !isCellOpen[cellIndex - 10]) {
+        showMinesAround(cellIndex - 10);
+      }
     }
 
-    if (minesAroundArray[cellIndex + 9] == 0 && !isCellOpen[cellIndex + 9]) {
-      styleOpenCell(i + 1,j - 1);
-      open(i + 1,j - 1);
+    if (isNotTop(cellIndex) && isNotRightEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex - 9] == 0 && !isCellOpen[cellIndex - 9]) {
+        styleOpenCell(cellIndex - 9);
+        open(cellIndex - 9);
+      }
+      else if (minesAround[cellIndex - 9] !== 0 && !isCellOpen[cellIndex - 9]) {
+        showMinesAround(cellIndex - 9);
+      }
     }
-    else if (minesAround[cellIndex + 9] !== 0 && !isCellOpen[cellIndex + 9]) {
-      showMinesAround(i + 1,j - 1);
+
+    if (isNotLeftEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex - 1] == 0 && !isCellOpen[cellIndex - 1]) {
+        styleOpenCell(cellIndex - 1);
+        open(cellIndex - 1);
+      }
+      else if (minesAround[cellIndex - 1] !== 0 && !isCellOpen[cellIndex - 1]) {
+        showMinesAround(cellIndex - 1);
+      }
     }
-    if (minesAroundArray[cellIndex + 10] == 0 && !isCellOpen[cellIndex + 10]) {
-      styleOpenCell(i + 1,j);
-      open(i + 1,j);
+
+    if (isNotRightEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex + 1] == 0 && !isCellOpen[cellIndex + 1]) {
+        styleOpenCell(cellIndex + 1);
+        open(cellIndex + 1);
+      }
+      else if (minesAround[cellIndex + 1] !== 0 && !isCellOpen[cellIndex + 1]) {
+        showMinesAround(cellIndex + 1);
+      }
     }
-    else if (minesAround[cellIndex + 10] !== 0 && !isCellOpen[cellIndex + 10]) {
-      showMinesAround(i + 1,j);
+
+    if (isNotBottom(cellIndex) && isNotLeftEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex + 9] == 0 && !isCellOpen[cellIndex + 9]) {
+        styleOpenCell(cellIndex + 9);
+        open(cellIndex + 9);
+      }
+      else if (minesAround[cellIndex + 9] !== 0 && !isCellOpen[cellIndex + 9]) {
+        showMinesAround(cellIndex + 9);
+      }
     }
-    if (minesAroundArray[cellIndex + 11] == 0 && !isCellOpen[cellIndex + 11]) {
-      styleOpenCell(i + 1,j + 1);
-      open(i + 1,j + 1);
+
+    if (isNotBottom(cellIndex)) {
+      if (minesAroundArray[cellIndex + 10] == 0 && !isCellOpen[cellIndex + 10]) {
+        styleOpenCell(cellIndex + 10);
+        open(cellIndex + 10);
+      }
+      else if (minesAround[cellIndex + 10] !== 0 && !isCellOpen[cellIndex + 10]) {
+        showMinesAround(cellIndex + 10);
+      }
     }
-    else if (minesAround[cellIndex + 11] !== 0 && !isCellOpen[cellIndex + 11]) {
-      showMinesAround(i + 1,j + 1);
+
+    if (isNotBottom(cellIndex) && isNotRightEdge(cellIndex)) {
+      if (minesAroundArray[cellIndex + 11] == 0 && !isCellOpen[cellIndex + 11]) {
+        styleOpenCell(cellIndex + 11);
+        open(cellIndex + 11);
+      }
+      else if (minesAround[cellIndex + 11] !== 0 && !isCellOpen[cellIndex + 11]) {
+        showMinesAround(cellIndex + 11);
+      }
     }
   };
 
-  let isCellFlaggedArray = new Array(cellCount).fill(false);
-
-  let flags = [];
-  let flagIndexes = [];
-
-  const flagCell = (i,j) => {
-    let cellIndex = ((i - 1) * rows) + j - 1;
+  const flagCell = (cellIndex) => {
 
     isCellFlaggedArray.splice(cellIndex,1,true);
 
@@ -315,18 +378,16 @@ window.addEventListener('load',function () {
 
     isCellOpen.splice(cellIndex,1,'flagged');
 
-    let x = ((j - 1) * colWidth);
-    let y = (i - 1) * colHeight;
+    let x = (cellIndex % cols) * colWidth;
+    let y = (Math.floor(cellIndex / rows)) * colHeight;
 
     let flagImg = new Image();
     flagImg.addEventListener(
       "load",
       () => {
-        ctx.clearRect(x,y,colWidth,colHeight);
+        ctx.clearRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
         ctx.fillStyle = '#a2efdf';
-        ctx.fillRect(x,y,colWidth,colHeight);
-        ctx.strokeStyle = 'black';
-        ctx.strokeRect(x,y,colWidth,colHeight);
+        ctx.fillRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
         ctx.drawImage(flagImg,x,y);
       },
       false
@@ -334,25 +395,16 @@ window.addEventListener('load',function () {
     flagImg.src = "./assets/img/flag1-30.png";
   }
 
-  const unflag = (i,j) => {
-
-    let cellIndex = ((i - 1) * rows) + j - 1;
+  const unflag = (cellIndex) => {
 
     isCellFlaggedArray.splice(cellIndex,1,false);
     isCellOpen.splice(cellIndex,1,false);
 
-    function filterOutFlag(flag) {
-      return (flag.i !== i && flag.j == j)
-    }
-
-    flags = flags.filter(filterOutFlag);
     flagIndexes = flagIndexes.filter((el) => el !== cellIndex);
 
-    let x = ((j - 1) * colWidth);
-    let y = (i - 1) * colHeight;
-    ctx.clearRect(x,y,colWidth,colHeight);
-    ctx.strokeStyle = 'gray';
-    ctx.strokeRect(x,y,colWidth,colHeight);
+    let x = (cellIndex % cols) * colWidth;
+    let y = (Math.floor(cellIndex / rows)) * colHeight;
+    ctx.clearRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
   }
 
   const checkIfWon = () => {
@@ -363,13 +415,13 @@ window.addEventListener('load',function () {
     if (arrayMatch(flagIndexes,mineIndexesArray)) {
       // if all mines were flagged
       exposeMines(true);
-      window.alert("You Won!");
+      console.log('all mines are flagged');
       return true;
     }
 
-    else if (isCellOpen.filter(el => el == false).length == minesCount) {
+    else if (isCellOpen.filter(el => el !== true).length == minesCount) {
       exposeMines(true);
-      window.alert("You Won!");
+      console.log('all cells opened only mines left');
       return true;
     }
     // if all mines were flagged
@@ -396,10 +448,30 @@ window.addEventListener('load',function () {
   //   }
   // }
 
+
+
+  let minesCount = 10;
+  let rows = 10;
+  let cols = 10;
+  let cellCount = rows * cols;
+  let colWidth = 30;
+  let colHeight = 30;
+  let cellIndexAll = [];
+  const mineIndexesArray = [];
+  const minesAroundArray = [];
+  let isCellFlaggedArray = new Array(cellCount).fill(false);
+  let flagIndexes = [];
+
+  for (let i = 0; i < cellCount; i++) {
+    cellIndexAll.push(i);
+  }
+
+  const ctx = canvas.getContext('2d');
+  canvas.height = colHeight * cols;
+  canvas.width = colWidth * rows;
+
   drawBoard();
 
-  let x = 0;
-  let y = 0;
   let clicks = 0;
   let coords = [];
   let isCellOpen = new Array(cellCount).fill(false);
@@ -412,16 +484,15 @@ window.addEventListener('load',function () {
 
   canvas.addEventListener('mousedown',function (e) {
 
-
     clicks++;
     getCursorPosition(canvas,e);
-    clickedCellIndex = ((coords[0] - 1) * minesCount) + coords[1] - 1;
+    clickedCellIndex = ((coords[0] - 1) * rows) + coords[1] - 1;
 
     if (clicks == 1) {
       placeMines();
       checkFirstClick();
+      countMinesAroundAll();
     }
-    countMinesAroundAll();
 
     //left-click
     if (e.button !== 2) {
@@ -431,25 +502,33 @@ window.addEventListener('load',function () {
       // check is cell is already open
       // and if it is not
       if (!isCellOpen[clickedCellIndex]) {
-        open(coords[0],coords[1]);
+        open(clickedCellIndex);
       }
       else if (isCellOpen[clickedCellIndex] == true) {
         console.log('already open cell');
       }
 
-      checkIfWon();
+      if (checkIfWon()) {
+        setTimeout(() => {
+          window.alert("You Won!");
+        },10)
+      };
 
     }
     //right-click
     else {
       if (isCellOpen[clickedCellIndex] !== 'flagged' && isCellOpen[clickedCellIndex] == false) {
-        flagCell(coords[0],coords[1]);
+        flagCell(clickedCellIndex);
       }
       else if (isCellOpen[clickedCellIndex] == 'flagged') {
-        unflag(coords[0],coords[1]);
+        unflag(clickedCellIndex);
       }
 
-      checkIfWon();
+      if (checkIfWon()) {
+        setTimeout(() => {
+          window.alert("You Won!");
+        },10)
+      };
     }
   })
 

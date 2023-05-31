@@ -1,57 +1,135 @@
 import '../scss/main.scss';
 
-const root = document.querySelector('.root');
-const canvas = document.createElement('canvas');
-canvas.className = 'canvas';
-root.appendChild(canvas);
+class Game {
+  start(minesCount,rows,cols) {
+    this.minesCount = minesCount;
+    this.rows = rows;
+    this.cols = cols;
 
-window.addEventListener('load',function () {
+    this.colWidth = 30;
+    this.colHeight = 30;
+    this.cellIndexAll = [];
+    this.mineIndexesArray = [];
+    this.minesAround;
+    this.minesAroundArray = [];
 
-  // Drawing the gameboard
-  const drawBoard = () => {
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        ctx.strokeStyle = '#9fb3c1';
-        ctx.strokeRect(i * colWidth,j * colHeight,colWidth,colHeight);
+    this.clicks = 0;
+    this.clickedCellIndex;
+    this.coords = [];
+
+    this.cellCount = this.rows * this.cols;
+    console.log(this.rows);
+    console.log(this.cellCount);
+    this.isCellFlaggedArray = new Array();
+    // this.isCellFlaggedArray = new Array(this.cellCount).fill(false);
+    this.flagIndexes = [];
+    this.isCellOpen = new Array();
+    // this.isCellOpen = new Array(this.cellCount).fill(false);
+
+
+    for (let i = 0; i < this.cellCount; i++) {
+      this.cellIndexAll.push(i);
+      this.isCellFlaggedArray.push(false);
+      this.isCellOpen.push(false);
+    }
+
+    // drawBoard();
+
+    canvas.addEventListener('contextmenu',function (e) {
+      e.preventDefault();
+    });
+
+    canvas.addEventListener('mousedown',(e) => {
+
+      this.onClickOnTile(e);
+    })
+  }
+
+  onClickOnTile(e) {
+
+    this.clicks++;
+    this.getCursorPosition(canvas,e);
+    this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
+
+    if (this.clicks == 1) {
+      this.placeMines();
+      this.checkFirstClick();
+      this.countMinesAroundAll();
+    }
+
+    //left-click
+    if (e.button !== 2) {
+
+      // place mines only after the first click
+      // and replace the mine with another is first click was on a mine
+      // check is cell is already open
+      // and if it is not
+      if (!this.isCellOpen[this.clickedCellIndex]) {
+        this.open(this.clickedCellIndex);
       }
+      else if (this.isCellOpen[this.clickedCellIndex] == true) {
+        console.log('already open cell');
+      }
+
+      if (this.checkIfWon()) {
+        setTimeout(() => {
+          window.alert("You Won!");
+        },10)
+      };
+
+    }
+    //right-click
+    else {
+      if (this.isCellOpen[this.clickedCellIndex] !== 'flagged' && this.isCellOpen[this.clickedCellIndex] == false) {
+        this.flagCell(this.clickedCellIndex);
+      }
+      else if (this.isCellOpen[this.clickedCellIndex] == 'flagged') {
+        this.unflag(this.clickedCellIndex);
+      }
+
+      if (this.checkIfWon()) {
+        setTimeout(() => {
+          window.alert("You Won!");
+        },10)
+      };
     }
   }
 
 
   // Place the mines
-  const placeMines = () => {
+  placeMines = () => {
 
-    for (let i = 0; i < minesCount; i++) {
+    for (let i = 0; i < this.minesCount; i++) {
 
-      let mineIndex = Math.floor(Math.random() * cellIndexAll.length);
+      let mineIndex = Math.floor(Math.random() * this.cellIndexAll.length);
 
-      mineIndexesArray.push(cellIndexAll[mineIndex]);
+      this.mineIndexesArray.push(this.cellIndexAll[mineIndex]);
 
-      cellIndexAll.splice(mineIndex,1);
+      this.cellIndexAll.splice(mineIndex,1);
     }
-    mineIndexesArray.sort((a,b) => a - b);
-    console.log(mineIndexesArray);
+    this.mineIndexesArray.sort((a,b) => a - b);
+    console.log(this.mineIndexesArray);
   }
 
-  const openUnopened = () => {
-    for (let i = 0; i < cellCount; i++) {
-      if (!isCellOpen[i]) {
-        let x = ((i) % cols) * colWidth;
-        let y = (Math.floor(i / rows)) * colHeight;
+  openUnopened = () => {
+    for (let i = 0; i < this.cellCount; i++) {
+      if (!this.isCellOpen[i]) {
+        let x = ((i) % this.cols) * this.colWidth;
+        let y = (Math.floor(i / this.rows)) * this.colHeight;
 
         ctx.fillStyle = '#6b7985';
-        ctx.fillRect(x,y,colWidth,colHeight);
+        ctx.fillRect(x,y,this.colWidth,this.colHeight);
         ctx.strokeStyle = '#404950';
-        ctx.strokeRect(x,y,colWidth,colHeight);
+        ctx.strokeRect(x,y,this.colWidth,this.colHeight);
 
-        isCellOpen.splice(i,1,true);
+        this.isCellOpen.splice(i,1,true);
       }
     }
   }
 
   // Exposing all mines (from downloaded img)
-  const exposeMines = (didWin) => {
-    openUnopened();
+  exposeMines = (didWin) => {
+    this.openUnopened();
 
     let color;
 
@@ -70,15 +148,15 @@ window.addEventListener('load',function () {
       "load",
       () => {
 
-        for (let i = 0; i < minesCount; i++) {
-          let x = (mineIndexesArray[i] % cols) * colWidth;
-          let y = (Math.floor(mineIndexesArray[i] / rows)) * colHeight;
+        for (let i = 0; i < this.minesCount; i++) {
+          let x = (this.mineIndexesArray[i] % this.cols) * this.colWidth;
+          let y = (Math.floor(this.mineIndexesArray[i] / this.rows)) * this.colHeight;
 
-          ctx.clearRect(x,y,colWidth,colHeight);
+          ctx.clearRect(x,y,this.colWidth,this.colHeight);
           ctx.fillStyle = color;
-          ctx.fillRect(x,y,colWidth,colHeight);
+          ctx.fillRect(x,y,this.colWidth,this.colHeight);
           ctx.strokeStyle = 'black';
-          ctx.strokeRect(x,y,colWidth,colHeight);
+          ctx.strokeRect(x,y,this.colWidth,this.colHeight);
           ctx.drawImage(mineImg,x,y);
         }
       },
@@ -88,7 +166,7 @@ window.addEventListener('load',function () {
 
   }
 
-  function getCursorPosition(canvas,event) {
+  getCursorPosition(canvas,event) {
     const rect = canvas.getBoundingClientRect();
     let x = 0;
     let y = 0;
@@ -96,290 +174,290 @@ window.addEventListener('load',function () {
     y = event.clientY - rect.top;
     let rowClicki = Math.floor(y / colWidth) + 1;
     let colClickj = Math.floor(x / colHeight) + 1;
-    coords = [rowClicki,colClickj];
-    return coords;
+    this.coords = [rowClicki,colClickj];
+    return this.coords;
   }
 
-  function randomExcluded(min,max,excluded) {
+  randomExcluded(min,max,excluded) {
     var n = Math.floor(Math.random() * (max - min) + min);
     if (n >= excluded) n++;
     return n;
   }
 
-  const checkFirstClick = () => {
+  checkFirstClick = () => {
 
-    if (mineIndexesArray.includes(clickedCellIndex)) {
+    if (this.mineIndexesArray.includes(this.clickedCellIndex)) {
 
-      let newMine = randomExcluded(1,cellIndexAll.length,clickedCellIndex);
+      let newMine = this.randomExcluded(1,this.cellIndexAll.length,this.clickedCellIndex);
 
-      mineIndexesArray.splice(mineIndexesArray.indexOf(clickedCellIndex),1,newMine);
+      this.mineIndexesArray.splice(this.mineIndexesArray.indexOf(this.clickedCellIndex),1,newMine);
 
-      cellIndexAll.splice(cellIndexAll.indexOf(newMine),1);
+      this.cellIndexAll.splice(this.cellIndexAll.indexOf(newMine),1);
     }
   }
 
-  const isMine = (cellIndex) => {
-    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+  isMine = (cellIndex) => {
+    if (cellIndex < 0 || cellIndex > this.cellCount - 1) {
       return;
     }
 
-    if (mineIndexesArray.includes(cellIndex)) {
+    if (this.mineIndexesArray.includes(cellIndex)) {
       return true;
     } else {
       return false;
     }
   }
 
-  const isNotRightEdge = (cellIndex) => {
-    if ((cellIndex % cols) !== (cols - 1)) {
+  isNotRightEdge = (cellIndex) => {
+    if ((cellIndex % this.cols) !== (this.cols - 1)) {
       return true;
     }
   }
 
-  const isNotLeftEdge = (cellIndex) => {
-    if ((cellIndex % cols) !== 0) {
+  isNotLeftEdge = (cellIndex) => {
+    if ((cellIndex % this.cols) !== 0) {
       return true;
     }
   }
 
-  const isNotTop = (cellIndex) => {
-    if ((cellIndex - cols) >= 0) {
+  isNotTop = (cellIndex) => {
+    if ((cellIndex - this.cols) >= 0) {
       return true;
     }
   }
 
-  const isNotBottom = (cellIndex) => {
-    if ((cellIndex + cols) <= cellCount) {
+  isNotBottom = (cellIndex) => {
+    if ((cellIndex + this.cols) <= this.cellCount) {
       return true;
     }
   }
 
-  const countMinesAround = (cellIndex) => {
-    minesAround = 0;
+  countMinesAround = (cellIndex) => {
+    this.minesAround = 0;
 
-    if (isNotTop(cellIndex) && isNotLeftEdge(cellIndex)) {
-      if (isMine(cellIndex - 11)) {
-        minesAround++;
-      }
-    }
-
-    if (isNotTop(cellIndex)) {
-      if (isMine(cellIndex - 10)) {
-        minesAround++;
+    if (this.isNotTop(cellIndex) && this.isNotLeftEdge(cellIndex)) {
+      if (this.isMine(cellIndex - 11)) {
+        this.minesAround++;
       }
     }
 
-    if (isNotTop(cellIndex) && isNotRightEdge(cellIndex)) {
-
-      if (isMine(cellIndex - 9)) {
-        minesAround++;
+    if (this.isNotTop(cellIndex)) {
+      if (this.isMine(cellIndex - 10)) {
+        this.minesAround++;
       }
     }
 
-    if (isNotLeftEdge(cellIndex)) {
-      if (isMine(cellIndex - 1)) {
-        minesAround++;
+    if (this.isNotTop(cellIndex) && this.isNotRightEdge(cellIndex)) {
+
+      if (this.isMine(cellIndex - 9)) {
+        this.minesAround++;
       }
     }
 
-    if (isNotRightEdge(cellIndex)) {
-      if (isMine(cellIndex + 1)) {
-        minesAround++;
+    if (this.isNotLeftEdge(cellIndex)) {
+      if (this.isMine(cellIndex - 1)) {
+        this.minesAround++;
       }
     }
 
-    if (isNotBottom(cellIndex) && isNotLeftEdge(cellIndex)) {
-      if (isMine(cellIndex + 9)) {
-        minesAround++;
+    if (this.isNotRightEdge(cellIndex)) {
+      if (this.isMine(cellIndex + 1)) {
+        this.minesAround++;
       }
     }
-    if (isNotBottom(cellIndex)) {
-      if (isMine(cellIndex + 10)) {
-        minesAround++;
+
+    if (this.isNotBottom(cellIndex) && this.isNotLeftEdge(cellIndex)) {
+      if (this.isMine(cellIndex + 9)) {
+        this.minesAround++;
       }
     }
-    if (isNotBottom(cellIndex) && isNotRightEdge(cellIndex)) {
-      if (isMine(cellIndex + 11)) {
-        minesAround++;
+    if (this.isNotBottom(cellIndex)) {
+      if (this.isMine(cellIndex + 10)) {
+        this.minesAround++;
       }
     }
-    return minesAround;
+    if (this.isNotBottom(cellIndex) && this.isNotRightEdge(cellIndex)) {
+      if (this.isMine(cellIndex + 11)) {
+        this.minesAround++;
+      }
+    }
+    return this.minesAround;
   };
 
-  const countMinesAroundAll = () => {
+  countMinesAroundAll = () => {
 
-    for (let i = 0; i < cellCount; i++) {
-      minesAroundArray.push(countMinesAround(i));
+    for (let i = 0; i < this.cellCount; i++) {
+      this.minesAroundArray.push(this.countMinesAround(i));
     }
-    return minesAroundArray;
+    return this.minesAroundArray;
   };
 
-  const open = (cellIndex) => {
+  open = (cellIndex) => {
 
-    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+    if (cellIndex < 0 || cellIndex > this.cellCount - 1) {
       return;
     }
 
-    if (isMine(cellIndex) == false) {
+    if (this.isMine(cellIndex) == false) {
 
-      if (minesAroundArray[cellIndex] == 0) {
-        styleOpenCell(cellIndex);
-        expandOpen(cellIndex);
+      if (this.minesAroundArray[cellIndex] == 0) {
+        this.styleOpenCell(cellIndex);
+        this.expandOpen(cellIndex);
       }
       else {
         // if there are mines Around
-        showMinesAround(cellIndex);
+        this.showMinesAround(cellIndex);
       };
-    } else if (isMine(cellIndex) == true) {
-      exposeMines(false);
+    } else if (this.isMine(cellIndex) == true) {
+      this.exposeMines(false);
     }
   }
 
-  const styleOpenCell = (cellIndex) => {
+  styleOpenCell = (cellIndex) => {
 
-    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+    if (cellIndex < 0 || cellIndex > this.cellCount - 1) {
       return;
     }
 
-    let x = (cellIndex % cols) * colWidth;
-    let y = (Math.floor(cellIndex / rows)) * colHeight;
+    let x = (cellIndex % this.cols) * this.colWidth;
+    let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
 
     ctx.fillStyle = '#8294a4';
-    ctx.fillRect(x,y,colWidth,colHeight);
+    ctx.fillRect(x,y,this.colWidth,this.colHeight);
     ctx.strokeStyle = '#404950';
-    ctx.strokeRect(x,y,colWidth,colHeight);
+    ctx.strokeRect(x,y,this.colWidth,this.colHeight);
 
-    isCellOpen.splice(cellIndex,1,true);
+    this.isCellOpen.splice(cellIndex,1,true);
   };
 
-  const showMinesAround = (cellIndex) => {
-    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+  showMinesAround = (cellIndex) => {
+    if (cellIndex < 0 || cellIndex > this.cellCount - 1) {
       return;
     }
 
-    let x = (cellIndex % cols) * colWidth;
-    let y = (Math.floor(cellIndex / rows)) * colHeight;
+    let x = (cellIndex % this.cols) * this.colWidth;
+    let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
 
-    styleOpenCell(cellIndex);
+    this.styleOpenCell(cellIndex);
     ctx.font = "20px Verdana";
     ctx.textAlign = 'center'
 
-    if (minesAroundArray[cellIndex] == 1) {
+    if (this.minesAroundArray[cellIndex] == 1) {
       ctx.fillStyle = "#a2d2ff";
-    } else if (minesAroundArray[cellIndex] == 2) {
+    } else if (this.minesAroundArray[cellIndex] == 2) {
       ctx.fillStyle = "#ffafcc";
-    } else if (minesAroundArray[cellIndex] == 3) {
+    } else if (this.minesAroundArray[cellIndex] == 3) {
       ctx.fillStyle = "#cdb4db";
-    } else if (minesAroundArray[cellIndex] == 4) {
+    } else if (this.minesAroundArray[cellIndex] == 4) {
       ctx.fillStyle = "#fcf6bd";
-    } else if (minesAroundArray[cellIndex] == 5) {
+    } else if (this.minesAroundArray[cellIndex] == 5) {
       ctx.fillStyle = "#f1faee";
     } else {
       ctx.fillStyle = "#f5af63";
     }
 
-    ctx.fillText(`${minesAroundArray[cellIndex]}`,x + colWidth / 2,y + colHeight / 1.3);
+    ctx.fillText(`${this.minesAroundArray[cellIndex]}`,x + this.colWidth / 2,y + this.colHeight / 1.3);
 
   }
 
-  const expandOpen = (cellIndex) => {
+  expandOpen = (cellIndex) => {
 
-    if (cellIndex < 0 || cellIndex > cellCount - 1) {
+    if (cellIndex < 0 || cellIndex > this.cellCount - 1) {
       return;
     }
 
-    if (isNotTop(cellIndex) && isNotLeftEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex - 11] == 0 && !isCellOpen[cellIndex - 11]) {
-        styleOpenCell(cellIndex - 11);
-        open(cellIndex - 11);
+    if (this.isNotTop(cellIndex) && this.isNotLeftEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex - 11] == 0 && !this.isCellOpen[cellIndex - 11]) {
+        this.styleOpenCell(cellIndex - 11);
+        this.open(cellIndex - 11);
       }
-      else if (minesAround[cellIndex - 11] !== 0 && !isCellOpen[cellIndex - 11]) {
-        showMinesAround(cellIndex - 11);
-      }
-    }
-
-    if (isNotTop(cellIndex)) {
-      if (minesAroundArray[cellIndex - 10] == 0 && !isCellOpen[cellIndex - 10]) {
-        styleOpenCell(cellIndex - 10);
-        open(cellIndex - 10);
-      }
-      else if (minesAround[cellIndex - 10] !== 0 && !isCellOpen[cellIndex - 10]) {
-        showMinesAround(cellIndex - 10);
+      else if (this.minesAround[cellIndex - 11] !== 0 && !this.isCellOpen[cellIndex - 11]) {
+        this.showMinesAround(cellIndex - 11);
       }
     }
 
-    if (isNotTop(cellIndex) && isNotRightEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex - 9] == 0 && !isCellOpen[cellIndex - 9]) {
-        styleOpenCell(cellIndex - 9);
-        open(cellIndex - 9);
+    if (this.isNotTop(cellIndex)) {
+      if (this.minesAroundArray[cellIndex - 10] == 0 && !this.isCellOpen[cellIndex - 10]) {
+        this.styleOpenCell(cellIndex - 10);
+        this.open(cellIndex - 10);
       }
-      else if (minesAround[cellIndex - 9] !== 0 && !isCellOpen[cellIndex - 9]) {
-        showMinesAround(cellIndex - 9);
-      }
-    }
-
-    if (isNotLeftEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex - 1] == 0 && !isCellOpen[cellIndex - 1]) {
-        styleOpenCell(cellIndex - 1);
-        open(cellIndex - 1);
-      }
-      else if (minesAround[cellIndex - 1] !== 0 && !isCellOpen[cellIndex - 1]) {
-        showMinesAround(cellIndex - 1);
+      else if (this.minesAround[cellIndex - 10] !== 0 && !this.isCellOpen[cellIndex - 10]) {
+        this.showMinesAround(cellIndex - 10);
       }
     }
 
-    if (isNotRightEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex + 1] == 0 && !isCellOpen[cellIndex + 1]) {
-        styleOpenCell(cellIndex + 1);
-        open(cellIndex + 1);
+    if (this.isNotTop(cellIndex) && this.isNotRightEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex - 9] == 0 && !this.isCellOpen[cellIndex - 9]) {
+        this.styleOpenCell(cellIndex - 9);
+        this.open(cellIndex - 9);
       }
-      else if (minesAround[cellIndex + 1] !== 0 && !isCellOpen[cellIndex + 1]) {
-        showMinesAround(cellIndex + 1);
-      }
-    }
-
-    if (isNotBottom(cellIndex) && isNotLeftEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex + 9] == 0 && !isCellOpen[cellIndex + 9]) {
-        styleOpenCell(cellIndex + 9);
-        open(cellIndex + 9);
-      }
-      else if (minesAround[cellIndex + 9] !== 0 && !isCellOpen[cellIndex + 9]) {
-        showMinesAround(cellIndex + 9);
+      else if (this.minesAround[cellIndex - 9] !== 0 && !this.isCellOpen[cellIndex - 9]) {
+        this.showMinesAround(cellIndex - 9);
       }
     }
 
-    if (isNotBottom(cellIndex)) {
-      if (minesAroundArray[cellIndex + 10] == 0 && !isCellOpen[cellIndex + 10]) {
-        styleOpenCell(cellIndex + 10);
-        open(cellIndex + 10);
+    if (this.isNotLeftEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex - 1] == 0 && !this.isCellOpen[cellIndex - 1]) {
+        this.styleOpenCell(cellIndex - 1);
+        this.open(cellIndex - 1);
       }
-      else if (minesAround[cellIndex + 10] !== 0 && !isCellOpen[cellIndex + 10]) {
-        showMinesAround(cellIndex + 10);
+      else if (this.minesAround[cellIndex - 1] !== 0 && !this.isCellOpen[cellIndex - 1]) {
+        this.showMinesAround(cellIndex - 1);
       }
     }
 
-    if (isNotBottom(cellIndex) && isNotRightEdge(cellIndex)) {
-      if (minesAroundArray[cellIndex + 11] == 0 && !isCellOpen[cellIndex + 11]) {
-        styleOpenCell(cellIndex + 11);
-        open(cellIndex + 11);
+    if (this.isNotRightEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex + 1] == 0 && !this.isCellOpen[cellIndex + 1]) {
+        this.styleOpenCell(cellIndex + 1);
+        this.open(cellIndex + 1);
       }
-      else if (minesAround[cellIndex + 11] !== 0 && !isCellOpen[cellIndex + 11]) {
-        showMinesAround(cellIndex + 11);
+      else if (this.minesAround[cellIndex + 1] !== 0 && !this.isCellOpen[cellIndex + 1]) {
+        this.showMinesAround(cellIndex + 1);
+      }
+    }
+
+    if (this.isNotBottom(cellIndex) && this.isNotLeftEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex + 9] == 0 && !this.isCellOpen[cellIndex + 9]) {
+        this.styleOpenCell(cellIndex + 9);
+        this.open(cellIndex + 9);
+      }
+      else if (this.minesAround[cellIndex + 9] !== 0 && !this.isCellOpen[cellIndex + 9]) {
+        this.showMinesAround(cellIndex + 9);
+      }
+    }
+
+    if (this.isNotBottom(cellIndex)) {
+      if (this.minesAroundArray[cellIndex + 10] == 0 && !this.isCellOpen[cellIndex + 10]) {
+        this.styleOpenCell(cellIndex + 10);
+        this.open(cellIndex + 10);
+      }
+      else if (this.minesAround[cellIndex + 10] !== 0 && !this.isCellOpen[cellIndex + 10]) {
+        this.showMinesAround(cellIndex + 10);
+      }
+    }
+
+    if (this.isNotBottom(cellIndex) && this.isNotRightEdge(cellIndex)) {
+      if (this.minesAroundArray[cellIndex + 11] == 0 && !this.isCellOpen[cellIndex + 11]) {
+        this.styleOpenCell(cellIndex + 11);
+        this.open(cellIndex + 11);
+      }
+      else if (this.minesAround[cellIndex + 11] !== 0 && !this.isCellOpen[cellIndex + 11]) {
+        this.showMinesAround(cellIndex + 11);
       }
     }
   };
 
-  const flagCell = (cellIndex) => {
+  flagCell = (cellIndex) => {
 
-    isCellFlaggedArray.splice(cellIndex,1,true);
+    this.isCellFlaggedArray.splice(cellIndex,1,true);
 
-    flagIndexes.push(cellIndex);
-    flagIndexes.sort((a,b) => a.i - b.i);
+    this.flagIndexes.push(cellIndex);
+    this.flagIndexes.sort((a,b) => a.i - b.i);
 
-    isCellOpen.splice(cellIndex,1,'flagged');
+    this.isCellOpen.splice(cellIndex,1,'flagged');
 
-    let x = (cellIndex % cols) * colWidth;
-    let y = (Math.floor(cellIndex / rows)) * colHeight;
+    let x = (cellIndex % this.cols) * this.colWidth;
+    let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
 
     let flagImg = new Image();
     flagImg.addEventListener(
@@ -395,32 +473,32 @@ window.addEventListener('load',function () {
     flagImg.src = "./assets/img/flag1-30.png";
   }
 
-  const unflag = (cellIndex) => {
+  unflag = (cellIndex) => {
 
-    isCellFlaggedArray.splice(cellIndex,1,false);
-    isCellOpen.splice(cellIndex,1,false);
+    this.isCellFlaggedArray.splice(cellIndex,1,false);
+    this.isCellOpen.splice(cellIndex,1,false);
 
-    flagIndexes = flagIndexes.filter((el) => el !== cellIndex);
+    this.flagIndexes = this.flagIndexes.filter((el) => el !== cellIndex);
 
-    let x = (cellIndex % cols) * colWidth;
-    let y = (Math.floor(cellIndex / rows)) * colHeight;
-    ctx.clearRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
+    let x = (cellIndex % this.cols) * this.colWidth;
+    let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
+    ctx.clearRect(x + 1,y + 1,this.colWidth - 2,this.colHeight - 2);
   }
 
-  const checkIfWon = () => {
+  checkIfWon = () => {
 
     const arrayMatch = (array1,array2) =>
       array2.every((element) => array1.includes(element));
 
-    if (arrayMatch(flagIndexes,mineIndexesArray)) {
+    if (arrayMatch(this.flagIndexes,this.mineIndexesArray)) {
       // if all mines were flagged
-      exposeMines(true);
+      this.exposeMines(true);
       console.log('all mines are flagged');
       return true;
     }
 
-    else if (isCellOpen.filter(el => el !== true).length == minesCount) {
-      exposeMines(true);
+    else if (this.isCellOpen.filter(el => el !== true).length == this.minesCount) {
+      this.exposeMines(true);
       console.log('all cells opened only mines left');
       return true;
     }
@@ -431,106 +509,46 @@ window.addEventListener('load',function () {
       return false;
     }
   }
-
-  // class Game {
-  //   constructor(width,height) {
-  //     this.width = width;
-  //     this.height = width;
-  //   }
-
-  //   update() {
-
-  //   }
-
-  //   draw() {
+}
 
 
-  //   }
-  // }
+const root = document.querySelector('.root');
+const canvas = document.createElement('canvas');
+canvas.className = 'canvas';
+root.appendChild(canvas);
+
+const ctx = canvas.getContext('2d');
+
+let colWidth = 30;
+let colHeight = 30;
+let cols = 10;
+let rows = 10;
+canvas.height = colHeight * cols;
+canvas.width = colWidth * rows;
+
+// Drawing the gameboard
+const drawBoard = (cols,rows) => {
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      ctx.strokeStyle = '#9fb3c1';
+      ctx.strokeRect(i * colWidth,j * colHeight,colWidth,colHeight);
+    }
+  }
+}
 
 
+window.addEventListener('load',function () {
 
-  let minesCount = 10;
+  let minesCount = 15;
   let rows = 10;
   let cols = 10;
-  let cellCount = rows * cols;
-  let colWidth = 30;
-  let colHeight = 30;
-  let cellIndexAll = [];
-  const mineIndexesArray = [];
-  const minesAroundArray = [];
-  let isCellFlaggedArray = new Array(cellCount).fill(false);
-  let flagIndexes = [];
 
-  for (let i = 0; i < cellCount; i++) {
-    cellIndexAll.push(i);
-  }
+  drawBoard(10,10);
 
-  const ctx = canvas.getContext('2d');
-  canvas.height = colHeight * cols;
-  canvas.width = colWidth * rows;
+  let newGame = new Game();
+  newGame.start(minesCount,rows,cols);
 
-  drawBoard();
 
-  let clicks = 0;
-  let coords = [];
-  let isCellOpen = new Array(cellCount).fill(false);
-  let clickedCellIndex;
-  let minesAround;
-
-  canvas.addEventListener('contextmenu',function (e) {
-    e.preventDefault();
-  });
-
-  canvas.addEventListener('mousedown',function (e) {
-
-    clicks++;
-    getCursorPosition(canvas,e);
-    clickedCellIndex = ((coords[0] - 1) * rows) + coords[1] - 1;
-
-    if (clicks == 1) {
-      placeMines();
-      checkFirstClick();
-      countMinesAroundAll();
-    }
-
-    //left-click
-    if (e.button !== 2) {
-
-      // place mines only after the first click
-      // and replace the mine with another is first click was on a mine
-      // check is cell is already open
-      // and if it is not
-      if (!isCellOpen[clickedCellIndex]) {
-        open(clickedCellIndex);
-      }
-      else if (isCellOpen[clickedCellIndex] == true) {
-        console.log('already open cell');
-      }
-
-      if (checkIfWon()) {
-        setTimeout(() => {
-          window.alert("You Won!");
-        },10)
-      };
-
-    }
-    //right-click
-    else {
-      if (isCellOpen[clickedCellIndex] !== 'flagged' && isCellOpen[clickedCellIndex] == false) {
-        flagCell(clickedCellIndex);
-      }
-      else if (isCellOpen[clickedCellIndex] == 'flagged') {
-        unflag(clickedCellIndex);
-      }
-
-      if (checkIfWon()) {
-        setTimeout(() => {
-          window.alert("You Won!");
-        },10)
-      };
-    }
-  })
 
 })
 

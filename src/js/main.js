@@ -13,19 +13,17 @@ class Game {
     this.minesAround;
     this.minesAroundArray = [];
 
-    this.clicks = 0;
+    // this.clicks = 0;
+    this.timer = null;
     this.clickedCellIndex;
     this.coords = [];
 
     this.cellCount = this.rows * this.cols;
     console.log(this.rows);
     console.log(this.cellCount);
-    this.isCellFlaggedArray = new Array();
-    // this.isCellFlaggedArray = new Array(this.cellCount).fill(false);
+    this.isCellFlaggedArray = [];
     this.flagIndexes = [];
-    this.isCellOpen = new Array();
-    // this.isCellOpen = new Array(this.cellCount).fill(false);
-
+    this.isCellOpen = [];
 
     for (let i = 0; i < this.cellCount; i++) {
       this.cellIndexAll.push(i);
@@ -34,36 +32,64 @@ class Game {
     }
 
     // drawBoard();
-
-    canvas.addEventListener('contextmenu',function (e) {
+    this.canvas = document.querySelector('.canvas');
+    this.ctx = this.canvas.getContext('2d');;
+    //right-click
+    this.canvas.addEventListener('contextmenu',(e) => {
       e.preventDefault();
-    });
+      this.onRightClick(e);
+      // console.log(this.isCellFlaggedArray[this.clickedCellIndex]);
+      console.log(this.isCellFlaggedArray);
+      return false;
+    },false);
 
-    canvas.addEventListener('mousedown',(e) => {
-
-      this.onClickOnTile(e);
+    this.canvas.addEventListener('click',(e) => {
+      this.onLeftClick(e);
     })
+
+    const timeCount = document.createElement('span');
+    timeCount.classList = "time-count"
+    timeCount.innerHTML = "00:00"
+    timer.appendChild(timeCount);
+
+    this.timer = setInterval(showTime,1000);
+    let seconds = 0;
+    function showTime() {
+      seconds++;
+      let hours = Math.floor(seconds / 3600);
+      let mins = Math.floor(seconds / 60) - (hours * 60);
+      let secs = Math.floor(seconds % 60);
+      let output = [];
+      output.push(
+        // hours.toString().padStart(2, '0'),
+        mins.toString().padStart(2,'0'),
+        secs.toString().padStart(2,'0'));
+      return timeCount.innerHTML = output.join(":")
+    }
   }
 
-  onClickOnTile(e) {
+  //left-click
+  onLeftClick(e) {
+    // this.clicks++;
 
-    this.clicks++;
-    this.getCursorPosition(canvas,e);
+    this.getCursorPosition(this.canvas,e);
     this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
 
-    if (this.clicks == 1) {
+    let moveCount = document.querySelector(".move-count");
+    let timeCount = document.querySelector(".time-count");
+    if (moveCount.innerHTML == '0') {
       this.placeMines();
       this.checkFirstClick();
       this.countMinesAroundAll();
     }
 
-    //left-click
-    if (e.button !== 2) {
-
-      // place mines only after the first click
-      // and replace the mine with another is first click was on a mine
-      // check is cell is already open
-      // and if it is not
+    // place mines only after the first click
+    // and replace the mine with another is first click was on a mine
+    // check is cell is already open
+    // and if it is not
+    console.log(e.button);
+    if (e.button == 0) {
+      moveCount.innerHTML++;
       if (!this.isCellOpen[this.clickedCellIndex]) {
         this.open(this.clickedCellIndex);
       }
@@ -72,27 +98,41 @@ class Game {
       }
 
       if (this.checkIfWon()) {
+        clearInterval(this.timer);
         setTimeout(() => {
-          window.alert("You Won!");
-        },10)
-      };
-
-    }
-    //right-click
-    else {
-      if (this.isCellOpen[this.clickedCellIndex] !== 'flagged' && this.isCellOpen[this.clickedCellIndex] == false) {
-        this.flagCell(this.clickedCellIndex);
-      }
-      else if (this.isCellOpen[this.clickedCellIndex] == 'flagged') {
-        this.unflag(this.clickedCellIndex);
-      }
-
-      if (this.checkIfWon()) {
-        setTimeout(() => {
-          window.alert("You Won!");
+          window.alert(`Hooray! You won in ${timeCount.innerHTML} and ${moveCount.innerHTML} moves!`);
         },10)
       };
     }
+  }
+
+  //right-click
+  onRightClick = (e) => {
+    // this.clicks++;
+    let moveCount = document.querySelector(".move-count");
+    let timeCount = document.querySelector(".time-count");
+    if (moveCount.innerHTML == '0') {
+      this.placeMines();
+      // this.checkFirstClick();
+      this.countMinesAroundAll();
+    };
+    moveCount.innerHTML++;
+    this.getCursorPosition(this.canvas,e);
+    this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
+
+    if (this.isCellOpen[this.clickedCellIndex] !== 'flagged' && this.isCellOpen[this.clickedCellIndex] == false) {
+      this.flagCell(this.clickedCellIndex);
+    }
+    else if (this.isCellOpen[this.clickedCellIndex] == 'flagged') {
+      this.unflag(this.clickedCellIndex);
+    }
+
+    if (this.checkIfWon()) {
+      clearInterval(this.timer);
+      setTimeout(() => {
+        window.alert(`Hooray! You won in ${timeCount.innerHTML} and ${moveCount.innerHTML} moves!`);
+      },10)
+    };
   }
 
 
@@ -117,10 +157,10 @@ class Game {
         let x = ((i) % this.cols) * this.colWidth;
         let y = (Math.floor(i / this.rows)) * this.colHeight;
 
-        ctx.fillStyle = '#6b7985';
-        ctx.fillRect(x,y,this.colWidth,this.colHeight);
-        ctx.strokeStyle = '#404950';
-        ctx.strokeRect(x,y,this.colWidth,this.colHeight);
+        this.ctx.fillStyle = '#6b7985';
+        this.ctx.fillRect(x,y,this.colWidth,this.colHeight);
+        this.ctx.strokeStyle = '#404950';
+        this.ctx.strokeRect(x,y,this.colWidth,this.colHeight);
 
         this.isCellOpen.splice(i,1,true);
       }
@@ -152,12 +192,12 @@ class Game {
           let x = (this.mineIndexesArray[i] % this.cols) * this.colWidth;
           let y = (Math.floor(this.mineIndexesArray[i] / this.rows)) * this.colHeight;
 
-          ctx.clearRect(x,y,this.colWidth,this.colHeight);
-          ctx.fillStyle = color;
-          ctx.fillRect(x,y,this.colWidth,this.colHeight);
-          ctx.strokeStyle = 'black';
-          ctx.strokeRect(x,y,this.colWidth,this.colHeight);
-          ctx.drawImage(mineImg,x,y);
+          this.ctx.clearRect(x,y,this.colWidth,this.colHeight);
+          this.ctx.fillStyle = color;
+          this.ctx.fillRect(x,y,this.colWidth,this.colHeight);
+          this.ctx.strokeStyle = 'black';
+          this.ctx.strokeRect(x,y,this.colWidth,this.colHeight);
+          this.ctx.drawImage(mineImg,x,y);
         }
       },
       false
@@ -309,6 +349,7 @@ class Game {
         this.showMinesAround(cellIndex);
       };
     } else if (this.isMine(cellIndex) == true) {
+      clearInterval(this.timer);
       this.exposeMines(false);
     }
   }
@@ -322,10 +363,10 @@ class Game {
     let x = (cellIndex % this.cols) * this.colWidth;
     let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
 
-    ctx.fillStyle = '#8294a4';
-    ctx.fillRect(x,y,this.colWidth,this.colHeight);
-    ctx.strokeStyle = '#404950';
-    ctx.strokeRect(x,y,this.colWidth,this.colHeight);
+    this.ctx.fillStyle = '#8294a4';
+    this.ctx.fillRect(x,y,this.colWidth,this.colHeight);
+    this.ctx.strokeStyle = '#404950';
+    this.ctx.strokeRect(x,y,this.colWidth,this.colHeight);
 
     this.isCellOpen.splice(cellIndex,1,true);
   };
@@ -339,24 +380,24 @@ class Game {
     let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
 
     this.styleOpenCell(cellIndex);
-    ctx.font = "20px Verdana";
-    ctx.textAlign = 'center'
+    this.ctx.font = "20px Verdana";
+    this.ctx.textAlign = 'center'
 
     if (this.minesAroundArray[cellIndex] == 1) {
-      ctx.fillStyle = "#a2d2ff";
+      this.ctx.fillStyle = "#a2d2ff";
     } else if (this.minesAroundArray[cellIndex] == 2) {
-      ctx.fillStyle = "#ffafcc";
+      this.ctx.fillStyle = "#ffafcc";
     } else if (this.minesAroundArray[cellIndex] == 3) {
-      ctx.fillStyle = "#cdb4db";
+      this.ctx.fillStyle = "#cdb4db";
     } else if (this.minesAroundArray[cellIndex] == 4) {
-      ctx.fillStyle = "#fcf6bd";
+      this.ctx.fillStyle = "#fcf6bd";
     } else if (this.minesAroundArray[cellIndex] == 5) {
-      ctx.fillStyle = "#f1faee";
+      this.ctx.fillStyle = "#f1faee";
     } else {
-      ctx.fillStyle = "#f5af63";
+      this.ctx.fillStyle = "#f5af63";
     }
 
-    ctx.fillText(`${this.minesAroundArray[cellIndex]}`,x + this.colWidth / 2,y + this.colHeight / 1.3);
+    this.ctx.fillText(`${this.minesAroundArray[cellIndex]}`,x + this.colWidth / 2,y + this.colHeight / 1.3);
 
   }
 
@@ -463,10 +504,10 @@ class Game {
     flagImg.addEventListener(
       "load",
       () => {
-        ctx.clearRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
-        ctx.fillStyle = '#a2efdf';
-        ctx.fillRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
-        ctx.drawImage(flagImg,x,y);
+        this.ctx.clearRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
+        this.ctx.fillStyle = '#a2efdf';
+        this.ctx.fillRect(x + 1,y + 1,colWidth - 2,colHeight - 2);
+        this.ctx.drawImage(flagImg,x,y);
       },
       false
     );
@@ -482,7 +523,7 @@ class Game {
 
     let x = (cellIndex % this.cols) * this.colWidth;
     let y = (Math.floor(cellIndex / this.rows)) * this.colHeight;
-    ctx.clearRect(x + 1,y + 1,this.colWidth - 2,this.colHeight - 2);
+    this.ctx.clearRect(x + 1,y + 1,this.colWidth - 2,this.colHeight - 2);
   }
 
   checkIfWon = () => {
@@ -513,21 +554,59 @@ class Game {
 
 
 const root = document.querySelector('.root');
-const canvas = document.createElement('canvas');
-canvas.className = 'canvas';
-root.appendChild(canvas);
 
-const ctx = canvas.getContext('2d');
+const container = document.createElement('div');
+container.className = 'container';
+root.appendChild(container);
+
+const newAndTopBox = document.createElement('div');
+newAndTopBox.className = 'button-box container__new-and-top-box';
+container.appendChild(newAndTopBox);
+
+const timerAndMovesBox = document.createElement('div');
+timerAndMovesBox.className = 'button-box container__timer-and-moves-box';
+container.appendChild(timerAndMovesBox);
+
+const newGameButton = document.createElement('button');
+newGameButton.className = 'button newGame-button';
+newGameButton.innerHTML = 'New Game';
+newAndTopBox.appendChild(newGameButton);
+
+const top10Button = document.createElement('button');
+top10Button.className = 'button top10-button';
+top10Button.innerHTML = 'Top 10';
+newAndTopBox.appendChild(top10Button);
+
+const moves = document.createElement('button');
+moves.className = 'button moves-display';
+moves.innerHTML = 'Moves: ';
+timerAndMovesBox.appendChild(moves);
+
+const moveCount = document.createElement('span');
+moveCount.classList = "move-count"
+moveCount.innerHTML = `${0}`;
+moves.appendChild(moveCount);
+
+const timer = document.createElement('button');
+timer.className = 'button timer-display';
+timer.innerHTML = 'Time: ';
+timerAndMovesBox.appendChild(timer);
 
 let colWidth = 30;
 let colHeight = 30;
 let cols = 10;
 let rows = 10;
-canvas.height = colHeight * cols;
-canvas.width = colWidth * rows;
+
 
 // Drawing the gameboard
 const drawBoard = (cols,rows) => {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'canvas';
+  canvas.height = colHeight * cols;
+  canvas.width = colWidth * rows;
+  root.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
       ctx.strokeStyle = '#9fb3c1';
@@ -536,19 +615,33 @@ const drawBoard = (cols,rows) => {
   }
 }
 
+// Removing the gameboard
+const eraseBoard = () => {
+  document.querySelector('.canvas').remove();
+}
+
 
 window.addEventListener('load',function () {
 
-  let minesCount = 15;
+  let minesCount = 10;
   let rows = 10;
   let cols = 10;
 
   drawBoard(10,10);
-
   let newGame = new Game();
+
   newGame.start(minesCount,rows,cols);
 
-
+  newGameButton.addEventListener('click',function (e) {
+    document.querySelector('.time-count').remove();
+    // document.querySelector('.move-count').remove();
+    clearInterval(this.timer);
+    eraseBoard();
+    drawBoard(10,10);
+    let movesCount = document.querySelector(".move-count");
+    movesCount.innerHTML = `${0}`;
+    newGame.start(minesCount,rows,cols);
+  })
 
 })
 

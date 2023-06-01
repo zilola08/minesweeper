@@ -623,7 +623,7 @@ const eraseBoard = () => {
 
 window.addEventListener('load',function () {
 
-  let minesCount = 10;
+  let minesCount = 15;
   let rows = 10;
   let cols = 10;
 

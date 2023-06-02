@@ -572,10 +572,10 @@ newGameButton.className = 'button newGame-button';
 newGameButton.innerHTML = 'New Game';
 newAndTopBox.appendChild(newGameButton);
 
-const top10Button = document.createElement('button');
-top10Button.className = 'button top10-button';
-top10Button.innerHTML = 'Top 10';
-newAndTopBox.appendChild(top10Button);
+// const top10Button = document.createElement('button');
+// top10Button.className = 'button top10-button';
+// top10Button.innerHTML = 'Top 10';
+// newAndTopBox.appendChild(top10Button);
 
 const moves = document.createElement('button');
 moves.className = 'button moves-display';

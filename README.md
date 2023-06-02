@@ -1,6 +1,6 @@
 # The **Minesweeper**
 
-[You can read about this game here]((https://en.wikipedia.org/wiki/Minesweeper_(video_game))
+[You can read about this game here](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
 Instructions:
 

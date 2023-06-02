@@ -559,9 +559,31 @@ const container = document.createElement('div');
 container.className = 'container';
 root.appendChild(container);
 
-const newAndTopBox = document.createElement('div');
-newAndTopBox.className = 'button-box container__new-and-top-box';
-container.appendChild(newAndTopBox);
+const LevelsBox = document.createElement('div');
+LevelsBox.className = 'button-box container__levels-box';
+container.appendChild(LevelsBox);
+
+const easyButton = document.createElement('button');
+easyButton.className = 'button easy level-button level-selected';
+easyButton.value = 10;
+easyButton.innerHTML = 'Easy';
+LevelsBox.appendChild(easyButton);
+
+const mediumButton = document.createElement('button');
+mediumButton.className = 'button medium level-button';
+mediumButton.value = 15;
+mediumButton.innerHTML = 'Medium';
+LevelsBox.appendChild(mediumButton);
+
+const hardButton = document.createElement('button');
+hardButton.className = 'button hard level-button';
+hardButton.value = 20;
+hardButton.innerHTML = 'Hard';
+LevelsBox.appendChild(hardButton);
+
+const newGameBox = document.createElement('div');
+newGameBox.className = 'button-box container__new-and-top-box';
+container.appendChild(newGameBox);
 
 const timerAndMovesBox = document.createElement('div');
 timerAndMovesBox.className = 'button-box container__timer-and-moves-box';
@@ -570,12 +592,7 @@ container.appendChild(timerAndMovesBox);
 const newGameButton = document.createElement('button');
 newGameButton.className = 'button newGame-button';
 newGameButton.innerHTML = 'New Game';
-newAndTopBox.appendChild(newGameButton);
-
-// const top10Button = document.createElement('button');
-// top10Button.className = 'button top10-button';
-// top10Button.innerHTML = 'Top 10';
-// newAndTopBox.appendChild(top10Button);
+newGameBox.appendChild(newGameButton);
 
 const moves = document.createElement('button');
 moves.className = 'button moves-display';
@@ -591,6 +608,11 @@ const timer = document.createElement('button');
 timer.className = 'button timer-display';
 timer.innerHTML = 'Time: ';
 timerAndMovesBox.appendChild(timer);
+
+// const flagsLeft = document.createElement('button');
+// flagsLeft.className = 'button flags-display';
+// flagsLeft.innerHTML = 'Flags left: ';
+// newGameBox.appendChild(flagsLeft);
 
 let colWidth = 30;
 let colHeight = 30;
@@ -623,7 +645,7 @@ const eraseBoard = () => {
 
 window.addEventListener('load',function () {
 
-  let minesCount = 15;
+  let minesCount = 10;
   let rows = 10;
   let cols = 10;
 
@@ -635,14 +657,42 @@ window.addEventListener('load',function () {
   newGameButton.addEventListener('click',function (e) {
     document.querySelector('.time-count').remove();
     // document.querySelector('.move-count').remove();
+    for (let i = 0; i < levelButtonsArray.length; i++) {
+      if (levelButtonsArray[i].classList.contains('level-selected')) {
+        minesCount = levelButtonsArray[i].value;
+      }
+    };
+
     clearInterval(this.timer);
     eraseBoard();
-    drawBoard(10,10);
+    drawBoard(rows,cols);
     let movesCount = document.querySelector(".move-count");
     movesCount.innerHTML = `${0}`;
     newGame.start(minesCount,rows,cols);
   })
 
+  const levelButtonsArray = Array.from(document.querySelectorAll('.level-button'));
+
+  levelButtonsArray.forEach((level) => {
+    level.addEventListener('click',(e) => {
+
+      for (let i = 0; i < levelButtonsArray.length; i++) {
+        levelButtonsArray[i].classList.remove('level-selected');
+      };
+
+      level.classList.add('level-selected');
+      minesCount = level.value;
+      console.log(minesCount);
+      document.querySelector('.time-count').remove();
+      // document.querySelector('.move-count').remove();
+      clearInterval(this.timer);
+      eraseBoard();
+      drawBoard(rows,cols);
+      let movesCount = document.querySelector(".move-count");
+      movesCount.innerHTML = `${0}`;
+      newGame.start(minesCount,rows,cols);
+    })
+  })
 })
 
 

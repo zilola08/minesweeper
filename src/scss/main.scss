@@ -22,6 +22,7 @@ body {
   justify-content: center;
   align-items: center;
   background-color: rgb(202, 246, 246);
+  gap: 1em;
 }
 
 .canvas {
@@ -38,8 +39,13 @@ body {
 
 .container {
   width: 300px;
-  height: 100px;
+  // height: 150px;
   // margin: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
 }
 
 .button-box {
@@ -51,14 +57,35 @@ body {
 
 .button {
   width: 45%;
-  height: 70%;
+  // height: 100%;
   border: #9fb3c1 1px solid;
-  color: rgb(47, 150, 166);
+  color: rgb(91, 175, 188);
   font-family: 'Patrick Hand', cursive;
   font-size: 1.3em;
   border-radius: 5px;
   text-align: center;
-  background-color: rgb(247, 229, 240);
+  background-color: rgb(247, 231, 241);
+}
+
+.newGame-button {
+  cursor: pointer;
+  background-color: rgb(135, 192, 230);
+  color: rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.level-button {
+  cursor: pointer;
+  background-color: rgb(115, 195, 195);
+  color: rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.level-selected {
+  background-color: rgb(115, 195, 195);
+  color: rgb(241, 242, 201);
+  border-color: rgb(247, 251, 13);
+  box-shadow: 0px 8px 15px;
 }
 
 span {

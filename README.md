@@ -1,6 +1,6 @@
 # The **Minesweeper**
 
-[You can read about this game here](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
+[You can read the Wikipedia article about this game here](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
 Instructions:
 
@@ -20,7 +20,7 @@ In order to win the game, you should:
 
 When the game is won, you will see a message with number of moves and the time you spent to win the game.
 
-[You can play the game by clicking here ;)](https://zilola08.github.io/minesweeper/dist/main.html)
+[You can play the game by clicking here](https://zilola08.github.io/minesweeper/dist/main.html)
 
 In this game, the following features are implemented:
 

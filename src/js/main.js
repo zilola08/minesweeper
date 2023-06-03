@@ -650,6 +650,17 @@ window.addEventListener('load',function () {
   let cols = 10;
 
   drawBoard(10,10);
+
+
+  // function preventDefault(event) {
+  //   event.preventDefault();
+  // }
+  
+  // canvas.addEventListener("touchstart", preventDefault);
+  // canvas.addEventListener("touchend", preventDefault);
+  // canvas.addEventListener("touchmove", preventDefault);
+  // canvas.addEventListener("touchcancel", preventDefault);
+
   let newGame = new Game();
 
   newGame.start(minesCount,rows,cols);

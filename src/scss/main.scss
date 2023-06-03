@@ -35,6 +35,8 @@ body {
 
   // this puts the canvas to the center of the page on any window size:
   // transform: translate(-50%, -40%);
+
+  -webkit-touch-callout:none; -webkit-user-select:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 
 .container {

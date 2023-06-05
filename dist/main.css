@@ -74,6 +74,13 @@ body {
   border-color: rgb(255, 255, 255);
 }
 
+.rules-button {
+  cursor: pointer;
+  background-color: rgb(198, 173, 234);
+  color: rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
 .level-button {
   cursor: pointer;
   background-color: rgb(115, 195, 195);

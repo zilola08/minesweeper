@@ -1,5 +1,18 @@
 import '../scss/main.scss';
 
+let hasTouch;
+let hasMouse;
+
+if (window.matchMedia("(any-pointer: coarse)").matches) {
+  hasTouch = true;
+};
+
+if (matchMedia('(pointer:fine)').matches) {
+  hasMouse = true;
+};
+
+console.log(hasTouch);
+
 class Game {
   start(minesCount,rows,cols) {
     this.minesCount = minesCount;
@@ -37,13 +50,56 @@ class Game {
     //right-click
     this.canvas.addEventListener('contextmenu',(e) => {
       e.preventDefault();
-      this.onRightClick(e);
-      // console.log(this.isCellFlaggedArray[this.clickedCellIndex]);
-      console.log(this.isCellFlaggedArray);
+      e.stopPropagation();
+
+      if (!hasTouch) {
+        this.onRightClick(e);
+      }
+      // // console.log(this.isCellFlaggedArray[this.clickedCellIndex]);
+      // console.log(this.isCellFlaggedArray);
       return false;
     },false);
 
+    //Long-touch event handling
+    if (hasTouch) {
+      let onlongtouch;
+      let touchTimer;
+      let touchduration = 800;
+      //length of time we want the user to touch before we do something
+
+      const touchstart = (e) => {
+        if (!touchTimer) {
+          touchTimer = setTimeout(onlongtouch,touchduration,e);
+        }
+      }
+
+      const touchend = (e) => {
+        //stops short touches from firing the event
+        if (touchTimer) {
+          clearTimeout(touchTimer); // clearTimeout
+        }
+        touchTimer = null;
+        // console.log(e);
+      }
+
+      onlongtouch = (e) => { //do something 
+        console.log('longtouch');
+        touchTimer = null;
+        console.log(e);
+        this.onRightClick(e);
+        console.log(this.isCellFlaggedArray);
+        return false;
+      };
+
+      // document.addEventListener("DOMContentLoaded",function (event) {
+      this.canvas.addEventListener("pointerdown",touchstart,false);
+      this.canvas.addEventListener("pointerup",touchend,false);
+      // });
+
+    }
+
     this.canvas.addEventListener('click',(e) => {
+      console.log('shorttouch');
       this.onLeftClick(e);
     })
 
@@ -88,27 +144,31 @@ class Game {
     // check is cell is already open
     // and if it is not
     console.log(e.button);
-    if (e.button == 0) {
-      moveCount.innerHTML++;
-      if (!this.isCellOpen[this.clickedCellIndex]) {
-        this.open(this.clickedCellIndex);
-      }
-      else if (this.isCellOpen[this.clickedCellIndex] == true) {
-        console.log('already open cell');
-      }
-
-      if (this.checkIfWon()) {
-        clearInterval(this.timer);
-        setTimeout(() => {
-          window.alert(`Hooray! You won in ${timeCount.innerHTML} and ${moveCount.innerHTML} moves!`);
-        },10)
-      };
+    // if (e.button == 0) {
+    moveCount.innerHTML++;
+    if (!this.isCellOpen[this.clickedCellIndex]) {
+      this.open(this.clickedCellIndex);
     }
+    else if (this.isCellOpen[this.clickedCellIndex] == true) {
+      console.log('already open cell');
+    }
+    else if (this.isCellFlaggedArray[this.clickedCellIndex] == true) {
+      console.log('flagged cell');
+    }
+
+    if (this.checkIfWon()) {
+      clearInterval(this.timer);
+      setTimeout(() => {
+        window.alert(`Hooray! You won in ${timeCount.innerHTML} and ${moveCount.innerHTML} moves!`);
+      },10)
+    };
+    // }
   }
 
   //right-click
   onRightClick = (e) => {
     // this.clicks++;
+    // e.preventDefault();
     let moveCount = document.querySelector(".move-count");
     let timeCount = document.querySelector(".time-count");
     if (moveCount.innerHTML == '0') {
@@ -118,7 +178,9 @@ class Game {
     };
     moveCount.innerHTML++;
     this.getCursorPosition(this.canvas,e);
+    // this.getTouchPosition(this.canvas,e);
     this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
+    console.log(this.clickedCellIndex);
 
     if (this.isCellOpen[this.clickedCellIndex] !== 'flagged' && this.isCellOpen[this.clickedCellIndex] == false) {
       this.flagCell(this.clickedCellIndex);
@@ -206,12 +268,26 @@ class Game {
 
   }
 
-  getCursorPosition(canvas,event) {
+  getCursorPosition = (canvas,event) => {
     const rect = canvas.getBoundingClientRect();
     let x = 0;
     let y = 0;
+    console.log(event);
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
+    let rowClicki = Math.floor(y / colWidth) + 1;
+    let colClickj = Math.floor(x / colHeight) + 1;
+    this.coords = [rowClicki,colClickj];
+    return this.coords;
+  }
+
+  getTouchPosition = (canvas,event) => {
+    const rect = canvas.getBoundingClientRect();
+    let x = 0;
+    let y = 0;
+    // console.log(event);
+    x = event.touches[0].clientX - rect.left;
+    y = event.touches[0].clientY - rect.top;
     let rowClicki = Math.floor(y / colWidth) + 1;
     let colClickj = Math.floor(x / colHeight) + 1;
     this.coords = [rowClicki,colClickj];
@@ -594,6 +670,11 @@ newGameButton.className = 'button newGame-button';
 newGameButton.innerHTML = 'New Game';
 newGameBox.appendChild(newGameButton);
 
+const rulesButton = document.createElement('button');
+rulesButton.className = 'button rules-button';
+rulesButton.innerHTML = 'Rules';
+newGameBox.appendChild(rulesButton);
+
 const moves = document.createElement('button');
 moves.className = 'button moves-display';
 moves.innerHTML = 'Moves: ';
@@ -608,6 +689,11 @@ const timer = document.createElement('button');
 timer.className = 'button timer-display';
 timer.innerHTML = 'Time: ';
 timerAndMovesBox.appendChild(timer);
+
+rulesButton.addEventListener('click', (e)=>{
+  console.log("rules");
+  alert(`A click/short tap on a cell will open the cell.\nA cell may be mined or unmined (then you see a number of mines adjacent to it).\nIf you open a mined cell, you LOSE.\nYou can flag a cell with a right-click on desktop computer (or long-press on mobile).\nIf you flag all mined cells and/or open all cells except mined ones, you WIN.`)
+})
 
 // const flagsLeft = document.createElement('button');
 // flagsLeft.className = 'button flags-display';
@@ -655,7 +741,7 @@ window.addEventListener('load',function () {
   // function preventDefault(event) {
   //   event.preventDefault();
   // }
-  
+
   // canvas.addEventListener("touchstart", preventDefault);
   // canvas.addEventListener("touchend", preventDefault);
   // canvas.addEventListener("touchmove", preventDefault);

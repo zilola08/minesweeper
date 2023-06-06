@@ -11,7 +11,8 @@ if (matchMedia('(pointer:fine)').matches) {
   hasMouse = true;
 };
 
-console.log(hasTouch);
+console.log("Touch screen?",hasTouch);
+console.log("has Mouse?",hasMouse);
 
 class Game {
   start(minesCount,rows,cols) {
@@ -55,53 +56,55 @@ class Game {
       if (!hasTouch) {
         this.onRightClick(e);
       }
-      // // console.log(this.isCellFlaggedArray[this.clickedCellIndex]);
-      // console.log(this.isCellFlaggedArray);
       return false;
     },false);
 
+    this.canvas.addEventListener('click',(e) => {
+      if (!hasTouch) {
+        console.log('shorttouch');
+        this.onLeftClick(e);
+      }
+    })
+
     //Long-touch event handling
+
+    let onlongtouch;
+    let longTouchTimer;
+    let longTouchduration = 800;
+    //length of time we want the user to touch before we do something
+
+    onlongtouch = (e) => {
+      console.log('longtouch');
+      longTouchTimer = null;
+      console.log(e);
+      this.onRightClick(e);
+      console.log(this.isCellFlaggedArray);
+      return false;
+    };
+
+    const longtouchstart = (e) => {
+      if (!longTouchTimer) {
+        longTouchTimer = setTimeout(onlongtouch,longTouchduration,e);
+      }
+    }
+
+    const longtouchend = (e) => {
+      //stops short touches from firing the event
+      if (longTouchTimer) {
+        clearTimeout(longTouchTimer);
+        this.onLeftClick(e)
+      }
+      longTouchTimer = null;
+      // console.log(e);
+    }
+
     if (hasTouch) {
-      let onlongtouch;
-      let touchTimer;
-      let touchduration = 800;
-      //length of time we want the user to touch before we do something
-
-      const touchstart = (e) => {
-        if (!touchTimer) {
-          touchTimer = setTimeout(onlongtouch,touchduration,e);
-        }
-      }
-
-      const touchend = (e) => {
-        //stops short touches from firing the event
-        if (touchTimer) {
-          clearTimeout(touchTimer); // clearTimeout
-        }
-        touchTimer = null;
-        // console.log(e);
-      }
-
-      onlongtouch = (e) => { //do something 
-        console.log('longtouch');
-        touchTimer = null;
-        console.log(e);
-        this.onRightClick(e);
-        console.log(this.isCellFlaggedArray);
-        return false;
-      };
-
       // document.addEventListener("DOMContentLoaded",function (event) {
-      this.canvas.addEventListener("pointerdown",touchstart,false);
-      this.canvas.addEventListener("pointerup",touchend,false);
+      this.canvas.addEventListener("pointerdown",longtouchstart,false);
+      this.canvas.addEventListener("pointerup",longtouchend,false);
       // });
 
     }
-
-    this.canvas.addEventListener('click',(e) => {
-      console.log('shorttouch');
-      this.onLeftClick(e);
-    })
 
     const timeCount = document.createElement('span');
     timeCount.classList = "time-count"
@@ -690,7 +693,7 @@ timer.className = 'button timer-display';
 timer.innerHTML = 'Time: ';
 timerAndMovesBox.appendChild(timer);
 
-rulesButton.addEventListener('click', (e)=>{
+rulesButton.addEventListener('click',(e) => {
   console.log("rules");
   alert(`A click/short tap on a cell will open the cell.\nA cell may be mined or unmined (then you see a number of mines adjacent to it).\nIf you open a mined cell, you LOSE.\nYou can flag a cell with a right-click on desktop computer (or long-press on mobile).\nIf you flag all mined cells and/or open all cells except mined ones, you WIN.`)
 })
@@ -735,17 +738,7 @@ window.addEventListener('load',function () {
   let rows = 10;
   let cols = 10;
 
-  drawBoard(10,10);
-
-
-  // function preventDefault(event) {
-  //   event.preventDefault();
-  // }
-
-  // canvas.addEventListener("touchstart", preventDefault);
-  // canvas.addEventListener("touchend", preventDefault);
-  // canvas.addEventListener("touchmove", preventDefault);
-  // canvas.addEventListener("touchcancel", preventDefault);
+  drawBoard(rows,cols);
 
   let newGame = new Game();
 
@@ -753,7 +746,6 @@ window.addEventListener('load',function () {
 
   newGameButton.addEventListener('click',function (e) {
     document.querySelector('.time-count').remove();
-    // document.querySelector('.move-count').remove();
     for (let i = 0; i < levelButtonsArray.length; i++) {
       if (levelButtonsArray[i].classList.contains('level-selected')) {
         minesCount = levelButtonsArray[i].value;

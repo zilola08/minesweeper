@@ -12,7 +12,7 @@ if (matchMedia('(pointer:fine)').matches) {
 };
 
 console.log("Touch screen?",hasTouch);
-console.log("has Mouse?",hasMouse);
+console.log("Has Mouse?",hasMouse);
 
 class Game {
   start(minesCount,rows,cols) {
@@ -26,15 +26,10 @@ class Game {
     this.mineIndexesArray = [];
     this.minesAround;
     this.minesAroundArray = [];
-
-    // this.clicks = 0;
     this.timer = null;
     this.clickedCellIndex;
     this.coords = [];
-
     this.cellCount = this.rows * this.cols;
-    console.log(this.rows);
-    console.log(this.cellCount);
     this.isCellFlaggedArray = [];
     this.flagIndexes = [];
     this.isCellOpen = [];
@@ -61,7 +56,7 @@ class Game {
 
     this.canvas.addEventListener('click',(e) => {
       if (!hasTouch) {
-        console.log('shorttouch');
+        // console.log('shorttouch');
         this.onLeftClick(e);
       }
     })
@@ -74,11 +69,9 @@ class Game {
     //length of time we want the user to touch before we do something
 
     onlongtouch = (e) => {
-      console.log('longtouch');
+      // console.log('longtouch');
       longTouchTimer = null;
-      console.log(e);
       this.onRightClick(e);
-      console.log(this.isCellFlaggedArray);
       return false;
     };
 
@@ -95,15 +88,11 @@ class Game {
         this.onLeftClick(e)
       }
       longTouchTimer = null;
-      // console.log(e);
     }
 
     if (hasTouch) {
-      // document.addEventListener("DOMContentLoaded",function (event) {
       this.canvas.addEventListener("pointerdown",longtouchstart,false);
       this.canvas.addEventListener("pointerup",longtouchend,false);
-      // });
-
     }
 
     const timeCount = document.createElement('span');
@@ -129,8 +118,6 @@ class Game {
 
   //left-click
   onLeftClick(e) {
-    // this.clicks++;
-
     this.getCursorPosition(this.canvas,e);
     this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
 
@@ -146,8 +133,6 @@ class Game {
     // and replace the mine with another is first click was on a mine
     // check is cell is already open
     // and if it is not
-    console.log(e.button);
-    // if (e.button == 0) {
     moveCount.innerHTML++;
     if (!this.isCellOpen[this.clickedCellIndex]) {
       this.open(this.clickedCellIndex);
@@ -165,25 +150,19 @@ class Game {
         window.alert(`Hooray! You won in ${timeCount.innerHTML} and ${moveCount.innerHTML} moves!`);
       },10)
     };
-    // }
   }
 
   //right-click
   onRightClick = (e) => {
-    // this.clicks++;
-    // e.preventDefault();
     let moveCount = document.querySelector(".move-count");
     let timeCount = document.querySelector(".time-count");
     if (moveCount.innerHTML == '0') {
       this.placeMines();
-      // this.checkFirstClick();
       this.countMinesAroundAll();
     };
     moveCount.innerHTML++;
     this.getCursorPosition(this.canvas,e);
-    // this.getTouchPosition(this.canvas,e);
     this.clickedCellIndex = ((this.coords[0] - 1) * rows) + this.coords[1] - 1;
-    console.log(this.clickedCellIndex);
 
     if (this.isCellOpen[this.clickedCellIndex] !== 'flagged' && this.isCellOpen[this.clickedCellIndex] == false) {
       this.flagCell(this.clickedCellIndex);
@@ -213,7 +192,6 @@ class Game {
       this.cellIndexAll.splice(mineIndex,1);
     }
     this.mineIndexesArray.sort((a,b) => a - b);
-    console.log(this.mineIndexesArray);
   }
 
   openUnopened = () => {
@@ -275,7 +253,6 @@ class Game {
     const rect = canvas.getBoundingClientRect();
     let x = 0;
     let y = 0;
-    console.log(event);
     x = event.clientX - rect.left;
     y = event.clientY - rect.top;
     let rowClicki = Math.floor(y / colWidth) + 1;
@@ -288,7 +265,6 @@ class Game {
     const rect = canvas.getBoundingClientRect();
     let x = 0;
     let y = 0;
-    // console.log(event);
     x = event.touches[0].clientX - rect.left;
     y = event.touches[0].clientY - rect.top;
     let rowClicki = Math.floor(y / colWidth) + 1;
@@ -694,7 +670,6 @@ timer.innerHTML = 'Time: ';
 timerAndMovesBox.appendChild(timer);
 
 rulesButton.addEventListener('click',(e) => {
-  console.log("rules");
   alert(`A click/short tap on a cell will open the cell.\nA cell may be mined or unmined (then you see a number of mines adjacent to it).\nIf you open a mined cell, you LOSE.\nYou can flag a cell with a right-click on desktop computer (or long-press on mobile).\nIf you flag all mined cells and/or open all cells except mined ones, you WIN.`)
 })
 
@@ -771,9 +746,7 @@ window.addEventListener('load',function () {
 
       level.classList.add('level-selected');
       minesCount = level.value;
-      console.log(minesCount);
       document.querySelector('.time-count').remove();
-      // document.querySelector('.move-count').remove();
       clearInterval(this.timer);
       eraseBoard();
       drawBoard(rows,cols);

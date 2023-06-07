@@ -23,19 +23,21 @@ body {
   align-items: center;
   background-color: rgb(202, 246, 246);
   gap: 1em;
+  -webkit-touch-callout: none;
+  /* Safari */
+  -webkit-user-select: none;
+  /* Chrome */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
 }
 
 .canvas {
   border: 1px solid #9fb3c1;
   background-color: rgb(235, 243, 249);
   border-radius: 5px;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 .container {
@@ -68,6 +70,13 @@ body {
 .newGame-button {
   cursor: pointer;
   background-color: rgb(135, 192, 230);
+  color: rgb(255, 255, 255);
+  border-color: rgb(255, 255, 255);
+}
+
+.rules-button {
+  cursor: pointer;
+  background-color: rgb(198, 173, 234);
   color: rgb(255, 255, 255);
   border-color: rgb(255, 255, 255);
 }

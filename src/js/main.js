@@ -670,7 +670,7 @@ timer.innerHTML = 'Time: ';
 timerAndMovesBox.appendChild(timer);
 
 rulesButton.addEventListener('click',(e) => {
-  alert(`A click/short tap on a cell will open the cell.\nA cell may be mined or unmined (then you see a number of mines adjacent to it).\nIf you open a mined cell, you LOSE.\nYou can flag a cell with a right-click on desktop computer (or long-press* on mobile). \n *NOTE: If you are using long-press, DON'T let go of the press until you see the move counter increase by one. Ohterwise it will work as a short tap and you will open the cell.\nIf you flag all mined cells and/or open all cells except mined ones, you WIN. \n Game has three difficulty levels: Easy (10 mines), Medium (25 mines), Hard (20 mines)`)
+  alert(`A click/short tap on a cell will open the cell.\nA cell may be mined or unmined (then you see a number of mines adjacent to it).\nIf you open a mined cell, you LOSE.\nYou can flag a cell with a right-click on desktop computer (or long-press* on mobile). \n If you flag all mined cells and/or open all cells except mined ones, you WIN. \n Game has three difficulty levels: Easy (10 mines), Medium (25 mines), Hard (20 mines)`)
 })
 
 // const flagsLeft = document.createElement('button');

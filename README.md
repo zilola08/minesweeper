@@ -1,6 +1,6 @@
 # The **Minesweeper**
 
-[You can read the Wikipedia article about this game here](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
+[You can read a Wikipedia article about this game here](https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
 [Or you can play the game by clicking here ;)](https://zilola08.github.io/minesweeper/dist/main.html)
 
